@@ -168,17 +168,35 @@ class Integer {
 			int len_p = this->len + other.len;
 			int product[len_p];
 			// this->naive_mult(rhs, product);
+			for (int i = 0; i<len_p; i++) {
+				product[i] = 0;
+				cout << product[i];
+			}
+			cout << endl;
+
+			int i_this = 0;
+			int i_other = 0;
 
 			
 			int carry;
 			for (int j = other.len - 1; j >= 0; j--) {
 				carry = 0;
+				i_other = 0;
 				for (int i = this->len - 1; i >= 0; i--) {
-					product[i + j-1] += carry + this->digits[i] * other.digits[j];
-					carry = product[i + j-1] / base;
-					product[i + j-1] = product[i + j-1] % base;
+					int sum = this->digits[i] * other.digits[j] + product[i_this + i_other] + carry;
+					carry = sum / base;
+					product[i_this + i_other] = sum % base;
+					i_other++;
+
+					// product[i + j-1] += carry + this->digits[i] * other.digits[j];
+					// carry = product[i + j-1] / base;
+					// product[i + j-1] = product[i + j-1] % base;
 				}
-				product[j + this->len] = carry;
+				if (carry > 0) {
+					product[i_this + i_other] += carry;
+				}
+				i_this++;
+				// product[j + this->len] = carry;
 			}
 			// Integer p (product, len_p);
 			// return p;
