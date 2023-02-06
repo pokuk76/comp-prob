@@ -39,12 +39,14 @@ class FFT {
 			int len;
 		};
 
+
 		/**
 		 * @brief Print an array of `fftw_complex` objects
 		 * 
 		 * @param a 
 		 * @param a_len 
 		 */
+		// template <class T>
 		void print_fftw(InputArray * a = NULL) {
 			if (a) {
 				for (int i = 0; i < a->len; i++) {
@@ -54,8 +56,33 @@ class FFT {
 			}
 
 			for (int i = 0; i < arr_len; i++) {
-				printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_arr[i][0], fft_arr[i][1]);
+				printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
 			}
+		}
+
+		// static fftw_complex * multiply(fftw_complex *A, fftw_complex *B) {
+		static fftw_complex * multiply(FFT *a, FFT *b) {
+			fftw_complex * A = a->fft_arr;
+			fftw_complex * B = b->fft_arr;
+			fftw_complex * R;
+			int nx = a->arr_len;
+			int ny = 1;
+			double scale = 1.0 / (nx * ny);
+
+			R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
+			for (int i = 0; i < nx; i++) {
+				// int ij = i * (ny / 2 + 1) + j;
+				R[i][0] = (A[i][0] * B[i][0] - A[i][1] * B[i][1]) * scale;
+				R[i][1] = (A[i][0] * B[i][1] + A[i][1] * B[i][0]) * scale;
+			}
+
+			InputArray in = {R, nx*ny};
+			// print_fftw(in);
+			cout << "Printing multiplication result..." << endl;
+			for (int i = 0; i < nx*ny; i++) {
+				printf("freq: %3d %+9.5f %+9.5f i\n", i, R[i][0], R[i][1]);
+			}
+			return (R);
 		}
 
 
@@ -76,6 +103,9 @@ class FFT {
 			} else {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
 			}
+
+			cout << "Printing fft result..." << endl;
+			this->print_fftw();
 
 			return fft_arr;
 
@@ -121,9 +151,9 @@ class Integer {
 		int mode;
 		int base = 10;
 
-		Integer(string digits_) {
+		// Integer(string digits_) {
 
-		}
+		// }
 
 		Integer(string digits_, int len_) {
 			len = len_;
@@ -162,7 +192,7 @@ class Integer {
 
 			int N = 4;
 			// kf
-			double * product = (double *) malloc(sizeof(double) * N);
+			int * product = (int *) malloc(sizeof(int) * N);
 			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
 
 			FFT f1 (this->digits, this->len);
@@ -171,9 +201,19 @@ class Integer {
 			f1.fft();
 			f2.fft();
 			
-			for () {
-				
-			}
+			// Okay assuming the arrays are the same length
+			// fftw_complex * temp;
+			// for (int i = 0; i < this->len; i++) {
+			// 	temp = FFT::multiply(f1.fft_arr[i], f2.fft_arr[i]);
+			// }
+			// cout << "Printing f1..." << endl;
+			// f1.print_fftw();
+			// cout << "Printing f2..." << endl;
+			// f2.print_fftw();
+			fftw_complex * p = FFT::multiply(&f1, &f2);
+
+			// int p = 0;
+			return product;
 		}
 
 		/**
@@ -292,11 +332,12 @@ class Integer {
 };
 
 string generate_integer() {
-
+	return "integer";
 }
 
-float * pad(string in, int in_len) {
-
+void pad(string in, int in_len) {
+	float l[4];
+	return;
 }
 
 
@@ -339,6 +380,14 @@ int main(int argc, char* argv[]) {
 	
 	// Integer C = A * B;
 	// C.print_int();
-	A.naive_mult2(B);
+	A.naive_mult(B);
+	// A.naive_mult2(B);
+
+	int x[4] = {2, 3, 0, 0};
+	int y[4] = {4, 1, 0, 0};
+
+	Integer X (x, 4);
+	Integer Y (y, 4);
+	X.big_mult(Y);
 
 }
