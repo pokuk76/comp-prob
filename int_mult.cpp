@@ -72,8 +72,10 @@ class FFT {
 			R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
 			for (int i = 0; i < nx; i++) {
 				// int ij = i * (ny / 2 + 1) + j;
-				R[i][0] = (A[i][0] * B[i][0] - A[i][1] * B[i][1]) * scale;
-				R[i][1] = (A[i][0] * B[i][1] + A[i][1] * B[i][0]) * scale;
+				// R[i][0] = (A[i][0] * B[i][0] - A[i][1] * B[i][1]) * scale;
+				// R[i][1] = (A[i][0] * B[i][1] + A[i][1] * B[i][0]) * scale;
+				R[i][0] = A[i][0] * B[i][0] - A[i][1] * B[i][1];
+				R[i][1] = A[i][0] * B[i][1] + A[i][1] * B[i][0];
 			}
 
 			InputArray in = {R, nx*ny};
@@ -107,7 +109,6 @@ class FFT {
 
 			cout << "Printing fft result..." << endl;
 			this->print_fftw();
-
 			return fft_arr;
 
 		}
