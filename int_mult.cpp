@@ -12,7 +12,6 @@ class FFT {
 		int arr_len;
 
 		// Holds results of all [I]FFT calculations (NB: will be overwritten on each call to `this.fft`)
-		fftw_complex * fft_in;
 		fftw_complex * fft_arr;
 		fftw_plan p;
 
@@ -20,11 +19,10 @@ class FFT {
 			arr = arr_;
 			arr_len = arr_len_;
 
-			fft_in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			// Initialize complex array with digits of arr
 			for (int i = 0; i < arr_len; i++) {
-				fft_in[i][0] = arr[i];
+				fft_arr[i][0] = arr[i];
 			}
 
 		}
@@ -32,7 +30,6 @@ class FFT {
 		~FFT() {
 			fftw_destroy_plan(p);
 			fftw_free(fft_arr);
-			fftw_free(fft_in);
 
 		}
 
@@ -102,9 +99,9 @@ class FFT {
 
 			// In either case, carry of FT in place
 			if (inverse) {
-				p = fftw_plan_dft_1d(arr_len, fft_in, fft_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
+				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
 			} else {
-				p = fftw_plan_dft_1d(arr_len, fft_in, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
+				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
 			}
 			fftw_execute(this->p);
 
