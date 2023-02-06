@@ -67,7 +67,8 @@ class FFT {
 		 * @param inverse - 
 		 * @return fftw_complex* 
 		 */
-		fftw_complex * fft(int * arr, int arr_len, bool inverse) {
+		// fftw_complex * fft(int * arr, int arr_len, bool inverse) {
+		fftw_complex * fft(bool inverse = false) {
 
 			// In either case, carry of FT in place
 			if (inverse) {
@@ -105,6 +106,8 @@ class FFT {
 			print_fftw(&a);
 			cout << "Expected FFT output: [ 5.0000 + 0.0000i 2.0000 - 3.0000i -1.0000 + 0.0000i 2.0000 + 3.0000i]" << endl;
 			fftw_destroy_plan(p);
+			fftw_free(fft_in);
+			fftw_free(fft_out);
 		}
 };
 
@@ -155,6 +158,24 @@ class Integer {
 			cout << endl;
 		}
 
+		int * big_mult(Integer const& other) {
+
+			int N = 4;
+			// kf
+			double * product = (double *) malloc(sizeof(double) * N);
+			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
+
+			FFT f1 (this->digits, this->len);
+			FFT f2 (other.digits, other.len);
+
+			f1.fft();
+			f2.fft();
+			
+			for () {
+				
+			}
+		}
+
 		/**
 		 * @brief 
 		 * TODO: Why this function has to be const <https://stackoverflow.com/questions/13103755/intellisense-the-object-has-type-qualifiers-that-are-not-compatible-with-the-me>
@@ -167,7 +188,6 @@ class Integer {
 		int * naive_mult(Integer const& other) const {
 			int len_p = this->len + other.len;
 			int product[len_p];
-			// this->naive_mult(rhs, product);
 			for (int i = 0; i<len_p; i++) {
 				product[i] = 0;
 				cout << product[i];
@@ -188,15 +208,53 @@ class Integer {
 					product[i_this + i_other] = sum % base;
 					i_other++;
 
-					// product[i + j-1] += carry + this->digits[i] * other.digits[j];
-					// carry = product[i + j-1] / base;
-					// product[i + j-1] = product[i + j-1] % base;
 				}
 				if (carry > 0) {
 					product[i_this + i_other] += carry;
 				}
 				i_this++;
-				// product[j + this->len] = carry;
+			}
+			for (int i = 0; i<len_p; i++) {
+				cout << product[i];
+			}
+			cout << endl;
+			return product;
+		}
+
+		int * naive_mult2(Integer const& other) const {
+			int len_p = this->len + other.len;
+			int product[len_p];
+			// this->naive_mult(rhs, product);
+			for (int i = 0; i<len_p; i++) {
+				product[i] = 0;
+				cout << product[i];
+			}
+			cout << endl;
+
+			int i_this = 0;
+			int i_other = 0;
+
+			
+			int carry;
+			for (int j = 0; j < other.len; j++) {
+				carry = 0;
+				i_other = 0;
+				for (int i = 0; i < this->len; i++) {
+					// int sum = this->digits[i] * other.digits[j] + product[i_this + i_other] + carry;
+					// carry = sum / base;
+					// product[i_this + i_other] = sum % base;
+					// i_other++;
+
+					product[i + j-1] += carry + this->digits[i] * other.digits[j];
+					carry = product[i + j-1] / base;
+					product[i + j-1] = product[i + j-1] % base;
+				}
+				// if (carry > 0) {
+				// 	product[i_this + i_other] += carry;
+				// }
+				// i_this++;
+				
+				product[j + this->len] = carry;
 			}
 			// Integer p (product, len_p);
 			// return p;
@@ -281,6 +339,6 @@ int main(int argc, char* argv[]) {
 	
 	// Integer C = A * B;
 	// C.print_int();
-	A.naive_mult(B);
+	A.naive_mult2(B);
 
 }
