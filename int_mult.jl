@@ -59,16 +59,27 @@ function big_mult()
     r = p[1]*100 + p[2]*10 + p[3]  # huh... don't fully understand this carry
     # Oh wait I do
     println("fft: $r")
+
+    product = 0
+    for i=1:4-1
+        # printf("%3d\n", p.arr[i]);
+        power = 4 - (i+1);
+        var = p[i]
+        println("$i: $var, $power");
+        product += p[i] * 10^power
+    end
+    println("Product: $product")
+    
 end
 
 function main()
-    # big_mult()
+    big_mult()
 
-    f1 = [2, 3, 9, 5, 8, 2, 3, 3]
-    len_f1 = 8
-	f2 = [5, 8, 3, 0]
-    len_f2 = 4
-    naive_mult(reverse(f1), len_f1, reverse(f2), len_f2)
+    # f1 = [2, 3, 9, 5, 8, 2, 3, 3]
+    # len_f1 = 8
+	# f2 = [5, 8, 3, 0]
+    # len_f2 = 4
+    # naive_mult(reverse(f1), len_f1, reverse(f2), len_f2)
 end
 
 main()

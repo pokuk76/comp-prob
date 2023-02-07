@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <fftw3.h>
+#include <math.h>
+#include <random>
+#include <time.h>       /* time */
 
 using namespace std;
 
@@ -15,9 +18,15 @@ class FFT {
 		fftw_complex * fft_arr;
 		fftw_plan p;
 
+		bool destroy_plan = true;
+
 		FFT(int * arr_, int arr_len_) {
-			arr = arr_;
 			arr_len = arr_len_;
+
+			// arr = arr_;
+			arr = (int *) malloc(sizeof(int) * arr_len);
+			memcpy(arr, arr_, sizeof(int) * arr_len);
+
 
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			// Initialize complex array with digits of arr
@@ -27,9 +36,28 @@ class FFT {
 
 		}
 
+		FFT(fftw_complex * fft_arr_, int arr_len_) {
+			// destroy_plan = false;
+			arr_len = arr_len_;
+
+			arr = (int *) malloc(sizeof(int) * arr_len);
+
+			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
+			memcpy(fft_arr, fft_arr_, sizeof(fftw_complex) * arr_len);
+			
+			cout << "\n\nTesting..." << endl;
+			for (int i = 0; i < arr_len; i++) {
+				printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
+			}
+		}
+
 		~FFT() {
+			// if (destroy_plan) {
+			// 	fftw_destroy_plan(p);
+			// }
 			fftw_destroy_plan(p);
 			fftw_free(fft_arr);
+			free(arr);
 
 		}
 
@@ -61,30 +89,26 @@ class FFT {
 		}
 
 		// static fftw_complex * multiply(fftw_complex *A, fftw_complex *B) {
-		static fftw_complex * multiply(FFT *a, FFT *b) {
+		// static fftw_complex * multiply(FFT *a, FFT *b, fftw_complex * r) {
+		static void multiply(FFT *a, FFT *b, fftw_complex * R) {
 			fftw_complex * A = a->fft_arr;
 			fftw_complex * B = b->fft_arr;
-			fftw_complex * R;
+			// fftw_complex * R;
 			int nx = a->arr_len;
 			int ny = 1;
 			double scale = 1.0 / (nx * ny);
 
-			R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
+			// Okay assuming the arrays are the same length
+			// R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
 			for (int i = 0; i < nx; i++) {
-				// int ij = i * (ny / 2 + 1) + j;
-				// R[i][0] = (A[i][0] * B[i][0] - A[i][1] * B[i][1]) * scale;
-				// R[i][1] = (A[i][0] * B[i][1] + A[i][1] * B[i][0]) * scale;
 				R[i][0] = A[i][0] * B[i][0] - A[i][1] * B[i][1];
 				R[i][1] = A[i][0] * B[i][1] + A[i][1] * B[i][0];
 			}
 
-			InputArray in = {R, nx*ny};
+			// InputArray in = {R, nx*ny};
 			// print_fftw(in);
-			cout << "Printing multiplication result..." << endl;
-			for (int i = 0; i < nx*ny; i++) {
-				printf("freq: %3d %+9.5f %+9.5f i\n", i, R[i][0], R[i][1]);
-			}
-			return (R);
+			
+			// return (R);
 		}
 
 
@@ -102,10 +126,18 @@ class FFT {
 			// In either case, carry of FT in place
 			if (inverse) {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
+				fftw_execute(this->p);
+				// FFTW performs unnormalized Inverse FFT so...
+				// TODO: set this->arr ?
+				for (int i = 0; i < arr_len; i++) {
+					// this->arr[i] = static_cast<int>(fft_arr[i][0]) / arr_len;
+					this->arr[i] = fft_arr[i][0] / arr_len;
+				}
 			} else {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
+				fftw_execute(this->p);
 			}
-			fftw_execute(this->p);
+			// fftw_execute(this->p);
 
 			cout << "Printing fft result..." << endl;
 			this->print_fftw();
@@ -190,32 +222,62 @@ class Integer {
 			cout << endl;
 		}
 
-		int * big_mult(Integer const& other) {
+		// int * big_mult(Integer const& other) {
+		int big_mult(Integer const& other) {
 
-			int N = 4;
+			// int N = 4;
+
+			/* Do the padding */
+			// TODO: Assuming this and other are of equal length
+			int N = this->len * 2;
+			// int * this_digits[N];
+			// int * other_digits[N];
+			int * this_digits = (int *) calloc(N, sizeof(int));
+			int * other_digits = (int *) calloc(N, sizeof(int));
+
+			memcpy(this_digits, this->digits, sizeof(int) * this->len);
+			memcpy(other_digits, other.digits, sizeof(int) * other.len);
+
+			
 			// kf
-			int * product = (int *) malloc(sizeof(int) * N);
+			int product = 0;
 			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
+			// FFT product ();
 
 			FFT f1 (this->digits, this->len);
 			FFT f2 (other.digits, other.len);
 
+			
 			f1.fft();
 			f2.fft();
 			
-			// Okay assuming the arrays are the same length
-			// fftw_complex * temp;
-			// for (int i = 0; i < this->len; i++) {
-			// 	temp = FFT::multiply(f1.fft_arr[i], f2.fft_arr[i]);
-			// }
-			// cout << "Printing f1..." << endl;
-			// f1.print_fftw();
-			// cout << "Printing f2..." << endl;
-			// f2.print_fftw();
-			fftw_complex * p = FFT::multiply(&f1, &f2);
+			// fftw_complex * p = FFT::multiply(&f1, &f2, fft_product);
+			FFT::multiply(&f1, &f2, fft_product);
 
-			// int p = 0;
-			return product;
+			cout << "Printing multiplication result..." << endl;
+			for (int i = 0; i < N; i++) {
+				printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
+			}
+
+			FFT p (fft_product, N);
+			// FFT p (other.digits, other.len);
+
+			cout << "\nIFFT step: " << endl;
+			p.fft(true);
+			// cout << p.arr[0] << endl;
+			int power;
+			for (int i = 0; i < p.arr_len-1; i++) {
+				// printf("%3d\n", p.arr[i]);
+				power = p.arr_len - (i+2);
+				cout << i << ": " << p.arr[i] << ", " << power << endl;
+				product += p.arr[i] * pow(10, power);
+			}
+
+			cout << product << endl;
+
+			// free(fft_product);
+
+			// return product;
 		}
 
 		/**
@@ -333,22 +395,28 @@ class Integer {
 		}
 };
 
-string generate_integer() {
-	return "integer";
+void generate_integer(int* bin, int len) {
+
+	// Seed with a real random value, if available
+    random_device r;
+    // Choose a random mean between 1 and 6
+    default_random_engine e1(r());
+    uniform_int_distribution<int> uniform_dist_(1, 9);
+    
+	bin[0] = uniform_dist_(e1);
+
+    uniform_int_distribution<int> uniform_dist(0, 9);
+	for (int i=1; i < len; i++) {
+		bin[i] = uniform_dist(e1);
+	}
 }
 
-void pad(string in, int in_len) {
+void pad(int * in, int in_len, int * pad_out, int pad_len) {
+
 	float l[4];
 	return;
 }
 
-
-string big_mult(string a, string b) {
-	
-
-	string r = "";
-	return r;
-}
 
 string naive_mult(string a, string b) {
 	int a_len = a.length();
@@ -391,5 +459,23 @@ int main(int argc, char* argv[]) {
 	Integer X (x, 4);
 	Integer Y (y, 4);
 	X.big_mult(Y);
+
+	// FFT p (b, 4);
+	// p.fft();
+
+	// Test integer generation
+	int n = 8;
+	int bin[n];
+
+	generate_integer(bin, n);
+
+	cout << "Random array: [ ";
+	for (int i=0; i<n; i++) {
+		cout << bin[i] << " ";
+	}
+	cout << "]" << endl;
+
+	/* Test Padding */
+	int * 
 
 }
