@@ -4,9 +4,10 @@
 #include <fftw3.h>
 #include <math.h>
 #include <random>
-#include <time.h>       /* time */
+#include <chrono>       /* time */
 
 using namespace std;
+using namespace std::chrono;
 
 class FFT {
 
@@ -178,12 +179,14 @@ class FFT {
 class Integer {
 
 	public:
-		int * digits;
+		int * digits = NULL;
 		int len;
 		// Naive v.s. FFT implementations
 		// TODO: Make this better? 
 		int mode;
 		int base = 10;
+
+		Integer() {}
 
 		// Integer(string digits_) {
 
@@ -193,15 +196,12 @@ class Integer {
 			len = len_;
 		}
 
-		Integer(int * digits_) {
-			digits = digits_;
-		}
-
 		Integer(int * digits_, int len_) {
-			// digits = (int *) malloc(sizeof(int) * len_);
-			// *digits = *digits_;
-			digits = digits_;
 			len = len_;
+
+			digits = (int *) malloc(sizeof(int) * len_);
+			// *digits = *digits_;
+			memcpy(digits, digits_, len);
 		}
 
 		Integer(int digits_, int len_) {
@@ -211,9 +211,21 @@ class Integer {
 			len = len_;
 		}
 
-		// ~Integer() {
+		~Integer() {
+			if (digits){
+				free(digits);
+			}
+		}
 
-		// }
+		void set_digits(int * digits_, int num_digits=-1){
+			if (num_digits==-1) {
+				this->len = num_digits;
+			}
+			digits = (int *) malloc(sizeof(int) * this->len);
+			memcpy(digits, digits_, this->len);
+			
+		}
+
 
 		void print_int() {
 			for (int i = 0; i < this->len; i++) {
@@ -223,8 +235,7 @@ class Integer {
 		}
 
 		// int * big_mult(Integer const& other) {
-		int big_mult(Integer const& other) {
-
+		void big_mult(Integer const& other, int * result=NULL) {
 			// int N = 4;
 
 			/* Do the padding */
@@ -238,14 +249,21 @@ class Integer {
 			memcpy(this_digits, this->digits, sizeof(int) * this->len);
 			memcpy(other_digits, other.digits, sizeof(int) * other.len);
 
+			cout << "Printing memcpy..." << endl;
+			printf("Padding [2, 3]: [");
+			for (int i = 0; i < N; i++) {
+				printf("%3d ", this_digits[i]);
+			}
+			printf("]\n");
+
 			
 			// kf
 			int product = 0;
 			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
 			// FFT product ();
 
-			FFT f1 (this->digits, this->len);
-			FFT f2 (other.digits, other.len);
+			FFT f1 (this_digits, N);
+			FFT f2 (other_digits, N);
 
 			
 			f1.fft();
@@ -273,11 +291,13 @@ class Integer {
 				product += p.arr[i] * pow(10, power);
 			}
 
-			cout << product << endl;
+			cout << "`big_mult` product: " << product << endl;
 
 			// free(fft_product);
 
-			// return product;
+			/* CLEAN UP */
+			free(this_digits);
+			free(other_digits);
 		}
 
 		/**
@@ -289,7 +309,7 @@ class Integer {
 		 * @return int* 
 		 */
 		// int * naive_mult(Integer const& other, int * product) const {
-		int * naive_mult(Integer const& other) const {
+		void naive_mult(Integer const& other, int * result=NULL) const {
 			int len_p = this->len + other.len;
 			int product[len_p];
 			for (int i = 0; i<len_p; i++) {
@@ -322,7 +342,6 @@ class Integer {
 				cout << product[i];
 			}
 			cout << endl;
-			return product;
 		}
 
 		int * naive_mult2(Integer const& other) const {
@@ -453,11 +472,13 @@ int main(int argc, char* argv[]) {
 	A.naive_mult(B);
 	// A.naive_mult2(B);
 
-	int x[4] = {2, 3, 0, 0};
-	int y[4] = {4, 1, 0, 0};
+	/* Big Mult Test */
 
-	Integer X (x, 4);
-	Integer Y (y, 4);
+	int x[4] = {2, 3};
+	int y[4] = {4, 1};
+
+	Integer X (x, 2);
+	Integer Y (y, 2);
 	X.big_mult(Y);
 
 	// FFT p (b, 4);
@@ -475,7 +496,38 @@ int main(int argc, char* argv[]) {
 	}
 	cout << "]" << endl;
 
-	/* Test Padding */
-	int * 
+	/* Experiment */
+	auto execution_time = 0;
+	auto limit = 10 * 60;  // 10 minutes
+
+	// Integer X, Y;
+	// int num_digits = 1;
+	// // while (execution_time < limit) {
+	// 	int digitsX[num_digits];
+	// 	int digitsY[num_digits];
+	// 	generate_integer(digitsX, num_digits);
+	// 	generate_integer(digitsY, num_digits);
+	// 	X.set_digits(digitsX, num_digits);
+	// 	Y.set_digits(digitsY, num_digits);
+		
+	// 	// Get starting timepoint
+	// 	auto start = high_resolution_clock::now();
+		
+	// 	// Call the function, here sort()
+		
+		
+	// 	// Get ending timepoint
+	// 	auto stop = high_resolution_clock::now();
+		
+	// 	// Get duration. Substart timepoints to
+	// 	// get duration. To cast it to proper unit
+	// 	// use duration cast method
+	// 	auto duration = duration_cast<microseconds>(stop - start);
+		
+	// 	cout << "Time taken by function: "
+	// 		 << duration.count() << " microseconds" << endl;
+		
+	// 	num_digits *= 2;
+	// // }
 
 }
