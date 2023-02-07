@@ -199,9 +199,9 @@ class Integer {
 		Integer(int * digits_, int len_) {
 			len = len_;
 
-			digits = (int *) malloc(sizeof(int) * len_);
+			digits = (int *) malloc(sizeof(int) * len);
 			// *digits = *digits_;
-			memcpy(digits, digits_, len);
+			memcpy(digits, digits_, sizeof(int)*len);
 		}
 
 		Integer(int digits_, int len_) {
@@ -218,11 +218,11 @@ class Integer {
 		}
 
 		void set_digits(int * digits_, int num_digits=-1){
-			if (num_digits==-1) {
+			if (!(num_digits==-1)) {
 				this->len = num_digits;
 			}
 			digits = (int *) malloc(sizeof(int) * this->len);
-			memcpy(digits, digits_, this->len);
+			memcpy(digits, digits_, sizeof(int)*this->len);
 			
 		}
 
@@ -311,16 +311,16 @@ class Integer {
 		// int * naive_mult(Integer const& other, int * product) const {
 		void naive_mult(Integer const& other, int * result=NULL) const {
 			int len_p = this->len + other.len;
-			int product[len_p];
+			// int product[len_p];
+			int * product = (int *) calloc(len_p, sizeof(int));
 			for (int i = 0; i<len_p; i++) {
-				product[i] = 0;
+				// product[i] = 0;
 				cout << product[i];
 			}
 			cout << endl;
 
 			int i_this = 0;
 			int i_other = 0;
-
 			
 			int carry;
 			for (int j = other.len - 1; j >= 0; j--) {
@@ -447,6 +447,14 @@ string naive_mult(string a, string b) {
 	return product;
 }
 
+void print_array(int * bin, int n, string term="") {
+	cout << term << "[ ";
+	for (int i=0; i<n; i++) {
+		cout << bin[i] << " ";
+	}
+	cout << "]" << endl;
+}
+
 int main(int argc, char* argv[]) {
 
 	// string a = "23958233";
@@ -477,9 +485,9 @@ int main(int argc, char* argv[]) {
 	int x[4] = {2, 3};
 	int y[4] = {4, 1};
 
-	Integer X (x, 2);
-	Integer Y (y, 2);
-	X.big_mult(Y);
+	// Integer X (x, 2);
+	// Integer Y (y, 2);
+	// X.big_mult(Y);
 
 	// FFT p (b, 4);
 	// p.fft();
@@ -490,44 +498,41 @@ int main(int argc, char* argv[]) {
 
 	generate_integer(bin, n);
 
-	cout << "Random array: [ ";
-	for (int i=0; i<n; i++) {
-		cout << bin[i] << " ";
-	}
-	cout << "]" << endl;
+	
 
 	/* Experiment */
-	auto execution_time = 0;
-	auto limit = 10 * 60;  // 10 minutes
+	auto execution_time = 0;  // In microseconds
+	auto limit = 10 * (60 * pow(10, 6));  // 10 minutes in microseconds (I hope)
 
-	// Integer X, Y;
-	// int num_digits = 1;
-	// // while (execution_time < limit) {
-	// 	int digitsX[num_digits];
-	// 	int digitsY[num_digits];
-	// 	generate_integer(digitsX, num_digits);
-	// 	generate_integer(digitsY, num_digits);
-	// 	X.set_digits(digitsX, num_digits);
-	// 	Y.set_digits(digitsY, num_digits);
+	Integer X, Y;
+	int num_digits = 1;
+	// while (execution_time < limit) {
+		int digitsX[num_digits];
+		int digitsY[num_digits];
+		generate_integer(digitsX, num_digits);
+		generate_integer(digitsY, num_digits);
+		print_array(digitsX, num_digits, "digitsX: ");
+		print_array(digitsY, num_digits, "digitsY: ");
+		X.set_digits(digitsX, num_digits);
+		Y.set_digits(digitsY, num_digits);
 		
-	// 	// Get starting timepoint
-	// 	auto start = high_resolution_clock::now();
+		// Get starting timepoint
+		auto start = high_resolution_clock::now();
 		
-	// 	// Call the function, here sort()
+		// Call the function, here sort()
+		X.naive_mult(Y);
 		
+		// Get ending timepoint
+		auto stop = high_resolution_clock::now();
 		
-	// 	// Get ending timepoint
-	// 	auto stop = high_resolution_clock::now();
+		// Get duration. Substart timepoints to
+		// get duration. To cast it to proper unit
+		// use duration cast method
+		auto duration = duration_cast<milliseconds>(stop - start);
+		cout << "Time taken by function: "
+			 << duration.count() << " milliseconds" << endl;
 		
-	// 	// Get duration. Substart timepoints to
-	// 	// get duration. To cast it to proper unit
-	// 	// use duration cast method
-	// 	auto duration = duration_cast<microseconds>(stop - start);
-		
-	// 	cout << "Time taken by function: "
-	// 		 << duration.count() << " microseconds" << endl;
-		
-	// 	num_digits *= 2;
-	// // }
+		num_digits *= 2;
+	// }
 
 }
