@@ -501,12 +501,16 @@ int main(int argc, char* argv[]) {
 	
 
 	/* Experiment */
-	auto execution_time = 0;  // In microseconds
+	// auto execution_time = 0;  // In microseconds
+	chrono::milliseconds execution_time;  // In microseconds
 	auto limit = 10 * (60 * pow(10, 6));  // 10 minutes in microseconds (I hope)
 
 	Integer X, Y;
 	int num_digits = 1;
 	// while (execution_time < limit) {
+	while (num_digits == 1) {
+        cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
+
 		int digitsX[num_digits];
 		int digitsY[num_digits];
 		generate_integer(digitsX, num_digits);
@@ -516,23 +520,19 @@ int main(int argc, char* argv[]) {
 		X.set_digits(digitsX, num_digits);
 		Y.set_digits(digitsY, num_digits);
 		
+        cout << "NAIVE_MULT" << endl;
 		// Get starting timepoint
 		auto start = high_resolution_clock::now();
-		
 		// Call the function, here sort()
 		X.naive_mult(Y);
-		
 		// Get ending timepoint
 		auto stop = high_resolution_clock::now();
-		
-		// Get duration. Substart timepoints to
-		// get duration. To cast it to proper unit
-		// use duration cast method
-		auto duration = duration_cast<milliseconds>(stop - start);
+		// Get duration
+		execution_time = duration_cast<milliseconds>(stop - start);
 		cout << "Time taken by function: "
-			 << duration.count() << " milliseconds" << endl;
+			 << execution_time.count() << " milliseconds" << endl;
 		
 		num_digits *= 2;
-	// }
+	}
 
 }
