@@ -338,54 +338,20 @@ class Integer {
 				}
 				i_this++;
 			}
+
+			// Product is reversed
+			if (product[len_p-1] == 0) {
+				// If last element of array (i.e. first digit) is 0, throw away
+			}
+    //     result = join(string.(reverse_product[2:len_p]))
+    // else
+    //     result = join(string.(reverse_product))
+    // end
+
 			for (int i = 0; i<len_p; i++) {
 				cout << product[i];
 			}
 			cout << endl;
-		}
-
-		int * naive_mult2(Integer const& other) const {
-			int len_p = this->len + other.len;
-			int product[len_p];
-			// this->naive_mult(rhs, product);
-			for (int i = 0; i<len_p; i++) {
-				product[i] = 0;
-				cout << product[i];
-			}
-			cout << endl;
-
-			int i_this = 0;
-			int i_other = 0;
-
-			
-			int carry;
-			for (int j = 0; j < other.len; j++) {
-				carry = 0;
-				i_other = 0;
-				for (int i = 0; i < this->len; i++) {
-					// int sum = this->digits[i] * other.digits[j] + product[i_this + i_other] + carry;
-					// carry = sum / base;
-					// product[i_this + i_other] = sum % base;
-					// i_other++;
-
-					product[i + j-1] += carry + this->digits[i] * other.digits[j];
-					carry = product[i + j-1] / base;
-					product[i + j-1] = product[i + j-1] % base;
-				}
-				// if (carry > 0) {
-				// 	product[i_this + i_other] += carry;
-				// }
-				// i_this++;
-				
-				product[j + this->len] = carry;
-			}
-			// Integer p (product, len_p);
-			// return p;
-			for (int i = 0; i<len_p; i++) {
-				cout << product[i];
-			}
-			cout << endl;
-			return product;
 		}
 
 		/**

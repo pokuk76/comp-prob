@@ -1,9 +1,10 @@
 # using Pkg
 # Pkg.add("FFTW")
 
-using TickTock
 using FFTW
-
+using TickTock
+using CSV
+using DataFrames
 
 function naive_mult(f1, f2, len_f1, len_f2)
 
@@ -97,6 +98,21 @@ function generate_integer(out, num_digits)
     out[2:end] = rand(0:9, num_digits-1)
 end
 
+function write_data(times, num_digits, inputs_X, inputs_Y, file_path)
+    # TODO: I guess it would be good to check if the file already exists...
+    touch(file_path)
+    df = DataFrame(
+        EXECUTION_TIME_S = times,
+        NUM_DIGITS = num_digits,
+        INPUT_1 = inputs_X,
+        INPUT_2 = inputs_Y,
+        # RESULT = products,
+    )
+    println("Dataframe:")
+    println(df)
+    CSV.write(file_path, df)
+end
+
 function main()
 
     # Fake input
@@ -111,10 +127,21 @@ function main()
     # naive_mult(reverse(f1), len_f1, reverse(f2), len_f2)
 
     # EXPERIMENT
-    execution_time = 0;  # In microseconds
-	limit = 10 * (60 * 10^6);  # 10 minutes in microseconds (I hope)
-
+    execution_time = 0;  # In seconds
+	limit = 10 * 60;  # 10 minutes in seconds (I hope)
 	num_digits = 1
+
+    # Data collection arrays
+    execution_time_naive = Vector{Float64}()
+    execution_time_big = Vector{Float64}()
+    num_digits_arr = Vector{Int64}()
+    inputs_X = Vector{String}()
+    inputs_Y = Vector{String}()
+    # Nvm...
+    # # Leave it as a vector of arrays and do the processing in the write data function
+    # inputs_X = Vector{Array{Int64}}()
+    # inputs_Y = Vector{Array{Int64}}()
+
     # while execution_time < limit
     while num_digits < 3
         println("\nNUMBER OF DIGITS: $num_digits")
@@ -123,6 +150,12 @@ function main()
 		generate_integer(X, num_digits)
 		generate_integer(Y, num_digits)
         println("X: $X | Y: $Y")
+
+        push!(num_digits_arr, num_digits)
+        push!(inputs_X, join(X))
+        push!(inputs_Y, join(Y))
+        # push!(inputs_X, X)
+        # push!(inputs_Y, Y)
 		
         println("NAIVE_MULT")
 		# Execution Time (in seconds I believe...)
@@ -132,14 +165,19 @@ function main()
         # var = typeof(execution_time)
         # println("$var")
 		println("\tExecution time [s]: $execution_time")
+        # append value to array before overwriting it
+        push!(execution_time_naive, execution_time)
 
         println("BIG_MULT")
         execution_time = @elapsed big_mult(X, Y, num_digits)
         execution_time_ms = execution_time * 10^6  # convert to microseconds
 		println("\tExecution time [s]: $execution_time")
+        push!(execution_time_big, execution_time)
+
 		
 		num_digits *= 2
 	end
+    write_data(execution_time_naive, num_digits_arr, inputs_X, inputs_Y, "test_naive.csv")
 end
 
 function test_naive()
