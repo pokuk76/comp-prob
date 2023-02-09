@@ -47,10 +47,10 @@ class FFT {
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			memcpy(fft_arr, fft_arr_, sizeof(fftw_complex) * arr_len);
 			
-			cout << "\n\nTesting..." << endl;
-			for (int i = 0; i < arr_len; i++) {
-				printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
-			}
+			// cout << "\n\nTesting..." << endl;
+			// for (int i = 0; i < arr_len; i++) {
+			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
+			// }
 		}
 
 		~FFT() {
@@ -141,8 +141,8 @@ class FFT {
 			}
 			// fftw_execute(this->p);
 
-			cout << "Printing fft result..." << endl;
-			this->print_fftw();
+			// cout << "Printing fft result..." << endl;
+			// this->print_fftw();
 			return fft_arr;
 
 		}
@@ -219,6 +219,9 @@ class Integer {
 		}
 
 		void set_digits(int * digits_, int num_digits=-1){
+			if (this->digits) {
+				free(this->digits);
+			}
 			if (!(num_digits==-1)) {
 				this->len = num_digits;
 			}
@@ -250,12 +253,12 @@ class Integer {
 			memcpy(this_digits, this->digits, sizeof(int) * this->len);
 			memcpy(other_digits, other.digits, sizeof(int) * other.len);
 
-			cout << "Printing memcpy..." << endl;
-			printf("Padding [2, 3]: [");
-			for (int i = 0; i < N; i++) {
-				printf("%3d ", this_digits[i]);
-			}
-			printf("]\n");
+			// cout << "Printing memcpy..." << endl;
+			// printf("Padding [2, 3]: [");
+			// for (int i = 0; i < N; i++) {
+			// 	printf("%3d ", this_digits[i]);
+			// }
+			// printf("]\n");
 
 			
 			// kf
@@ -273,26 +276,25 @@ class Integer {
 			// fftw_complex * p = FFT::multiply(&f1, &f2, fft_product);
 			FFT::multiply(&f1, &f2, fft_product);
 
-			cout << "Printing multiplication result..." << endl;
-			for (int i = 0; i < N; i++) {
-				printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
-			}
+			// cout << "Printing multiplication result..." << endl;
+			// for (int i = 0; i < N; i++) {
+			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
+			// }
 
 			FFT p (fft_product, N);
 			// FFT p (other.digits, other.len);
 
-			cout << "\nIFFT step: " << endl;
+			// cout << "\nIFFT step: " << endl;
 			p.fft(true);
-			// cout << p.arr[0] << endl;
 			int power;
 			for (int i = 0; i < p.arr_len-1; i++) {
 				// printf("%3d\n", p.arr[i]);
 				power = p.arr_len - (i+2);
-				cout << i << ": " << p.arr[i] << ", " << power << endl;
+				// cout << i << ": " << p.arr[i] << ", " << power << endl;
 				product += p.arr[i] * pow(10, power);
 			}
 
-			cout << "`big_mult` product: " << product << endl;
+			// cout << "`big_mult` product: " << product << endl;
 
 			// free(fft_product);
 
@@ -454,7 +456,7 @@ int main(int argc, char* argv[]) {
 	
 	// Integer C = A * B;
 	// C.print_int();
-	A.naive_mult(B);
+	// A.naive_mult(B);
 	// A.naive_mult2(B);
 
 	/* Big Mult Test */
@@ -472,9 +474,11 @@ int main(int argc, char* argv[]) {
 	/* Experiment */
 
 	// auto execution_time = 0;  // In microseconds
-	chrono::milliseconds execution_time_naive;  // In milliseconds
-	chrono::milliseconds execution_time_big;
-	auto limit = 10 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
+	// chrono::milliseconds execution_time_naive;  // In milliseconds
+	int execution_time_naive = 0;  // In milliseconds
+	// cout << "Initialized execution time: " << execution_time_naive.count() << endl;
+	int execution_time_big = 0;
+	auto limit = 1 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
 
 	Integer X, Y;
 	int num_digits = 1;
@@ -484,68 +488,72 @@ int main(int argc, char* argv[]) {
 	string naive_file = "n_squared_cpp.csv";
 	string big_file = "n_logn_cpp.csv";
 
-	cout << "NAIVE_MULT" << endl;
-	data.open(naive_file);
-	data << "NUM_DIGITS, EXECUTION_TIME_NSQUARED_S\n";
-	// while (execution_time < limit) {
-	while (num_digits < 5) {
-        cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
+	// cout << "-----------NAIVE_MULT------------" << endl;
+	// data.open(naive_file);
+	// data << "NUM_DIGITS, EXECUTION_TIME_NSQUARED[ms]\n";
+	// while (execution_time_naive < limit) {
+	// // while (num_digits < 5) {
+    //     cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
-		int digitsX[num_digits];
-		int digitsY[num_digits];
-		generate_integer(digitsX, num_digits);
-		generate_integer(digitsY, num_digits);
-		print_array(digitsX, num_digits, "digitsX: ");
-		print_array(digitsY, num_digits, "digitsY: ");
-		X.set_digits(digitsX, num_digits);
-		Y.set_digits(digitsY, num_digits);
+	// 	int digitsX[num_digits];
+	// 	int digitsY[num_digits];
+	// 	generate_integer(digitsX, num_digits);
+	// 	generate_integer(digitsY, num_digits);
+	// 	// print_array(digitsX, num_digits, "digitsX: ");
+	// 	// print_array(digitsY, num_digits, "digitsY: ");
+	// 	X.set_digits(digitsX, num_digits);
+	// 	Y.set_digits(digitsY, num_digits);
 		
-		// Get starting timepoint
-		auto start = high_resolution_clock::now();
-		// Call the function, here sort()
-		X.naive_mult(Y);
-		// Get ending timepoint
-		auto stop = high_resolution_clock::now();
-		// Get duration
-		execution_time_naive = duration_cast<milliseconds>(stop - start);
-		cout << "Time taken by function: "
-			 << execution_time_naive.count() << " milliseconds" << endl;
+	// 	// Get starting timepoint
+	// 	auto start = high_resolution_clock::now();
+	// 	// Call the function, here sort()
+	// 	cout << "\tCalling naive_mult..." << endl;
+	// 	X.naive_mult(Y);
+	// 	// Get ending timepoint
+	// 	auto stop = high_resolution_clock::now();
+	// 	// Get duration
+	// 	execution_time_naive = duration_cast<milliseconds>(stop - start).count();
+	// 	// cout << "Time taken by function: "
+	// 	// 	 << execution_time_naive.count() << " milliseconds" << endl;
+
+	// 	data << num_digits << ", " << execution_time_naive << "\n";
 		
-		num_digits *= 2;
-	}
-	data.close();
+	// 	num_digits *= 2;
+	// }
+	// data.close();
 
     
-	cout << "BIG_MULT" << endl;
+	cout << "--------------BIG_MULT--------------" << endl;
 	// Reset things
 	num_digits = 1;
 	data.open(big_file);
-	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN_S\n";
-	// while (execution_time_big < limit) {
-	while (num_digits < 5) {
+	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
+	while (execution_time_big < limit) {
+	// while (num_digits < 5) {
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
 		int digitsX[num_digits];
 		int digitsY[num_digits];
 		generate_integer(digitsX, num_digits);
 		generate_integer(digitsY, num_digits);
-		print_array(digitsX, num_digits, "digitsX: ");
-		print_array(digitsY, num_digits, "digitsY: ");
+		// print_array(digitsX, num_digits, "digitsX: ");
+		// print_array(digitsY, num_digits, "digitsY: ");
 		X.set_digits(digitsX, num_digits);
 		Y.set_digits(digitsY, num_digits);
 		
 		// Get starting timepoint
 		auto start = high_resolution_clock::now();
 		// Call the function, here sort()
+		cout << "\tCalling big_mult..." << endl;
 		X.big_mult(Y);
 		// Get ending timepoint
 		auto stop = high_resolution_clock::now();
 		// Get duration
-		execution_time_big = duration_cast<milliseconds>(stop - start);
-		cout << "Time taken by function: "
-			 << execution_time_big.count() << " milliseconds" << endl;
+		execution_time_big = duration_cast<milliseconds>(stop - start).count();
+		// cout << "Time taken by function: "
+		// 	 << execution_time_big.count() << " milliseconds" << endl;
 
-		data << num_digits << ", " << execution_time_big.count() << "\n";
+		data << num_digits << ", " << execution_time_big << "\n";
 		
 		num_digits *= 2;
 	}
