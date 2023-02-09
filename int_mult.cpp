@@ -32,14 +32,20 @@ class FFT {
 			// Initialize complex array with digits of arr
 
 			// TODO: Do the padding here to save space?
-			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
+			int pad_len = 2 * arr_len;
+			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pad_len);
 			for (int i = 0; i < arr_len; i++) {
 				fft_arr[i][0] = (*arr)[i];
+			}
+			for (int i = arr_len; i < pad_len; i++) {
+				fft_arr[i][0] = 0;
 			}
 
 		}
 
 		FFT(fftw_complex * fft_arr_, int arr_len_) {
+			// Don't pad in this case
+
 			// destroy_plan = false;
 			arr_len = arr_len_;
 
@@ -184,7 +190,7 @@ class Integer {
 
 	public:
 		// int * digits = NULL;
-		vector<int8_t> digits;
+		vector<int8_t> * digits;
 		int len;
 		// Naive v.s. FFT implementations
 		// TODO: Make this better? 
@@ -201,7 +207,7 @@ class Integer {
 			len = len_;
 		}
 
-		Integer(vector<int8_t> digits_, int len_) {
+		Integer(vector<int8_t> * digits_, int len_) {
 			len = len_;
 
 			// digits = (int *) malloc(sizeof(int) * len);
@@ -223,7 +229,7 @@ class Integer {
 		// }
 
 		// void set_digits(int * digits_, int num_digits=-1){
-		void set_digits(vector<int8_t> digits_, int num_digits=-1){
+		void set_digits(vector<int8_t> * digits_, int num_digits=-1){
 			// if (this->digits) {
 			// 	free(this->digits);
 			// }
@@ -239,7 +245,7 @@ class Integer {
 
 		void print_int() {
 			for (int i = 0; i < this->len; i++) {
-				cout << digits[i];
+				cout << (*digits)[i];
 			}
 			cout << endl;
 		}
@@ -250,28 +256,25 @@ class Integer {
 
 			/* Do the padding */
 			// TODO: Assuming this and other are of equal length
-			int N = this->len * 2;
-			vector<int8_t> this_digits(N, 0);
-			vector<int8_t> other_digits(N, 0);
-			// <https://cplusplus.com/reference/algorithm/copy/>
-			copy( this->digits.begin(), this->digits.begin()+this->len, this_digits.begin() );
-			copy( other.digits.begin(), other.digits.begin()+other.len, other_digits.begin() );
-
-			// cout << "Printing memcpy..." << endl;
-			// printf("Padding [2, 3]: [");
-			// for (int i = 0; i < N; i++) {
-			// 	printf("%3d ", this_digits[i]);
-			// }
-			// printf("]\n");
+			int pad_N = this->len * 2;
+			int N = this->len;
+			// vector<int8_t> this_digits(N, 0);
+			// vector<int8_t> other_digits(N, 0);
+			// // <https://cplusplus.com/reference/algorithm/copy/>
+			// copy( this->digits.begin(), this->digits.begin()+this->len, this_digits.begin() );
+			// copy( other.digits.begin(), other.digits.begin()+other.len, other_digits.begin() );
 
 			
 			// kf
 			int product = 0;
-			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
+			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
+			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * pad_N);
 			// FFT product ();
 
-			FFT f1 (&this_digits, N);
-			FFT f2 (&other_digits, N);
+			// FFT f1 (&this_digits, N);
+			// FFT f2 (&other_digits, N);
+			FFT f1 (this->digits, N);
+			FFT f2 (other.digits, N);
 
 			
 			f1.fft();
@@ -285,7 +288,7 @@ class Integer {
 			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
 			// }
 
-			FFT p (fft_product, N);
+			FFT p (fft_product, pad_N);
 			// FFT p (other.digits, other.len);
 
 			// cout << "\nIFFT step: " << endl;
@@ -336,7 +339,7 @@ class Integer {
 				carry = 0;
 				i_other = 0;
 				for (int i = this->len - 1; i >= 0; i--) {
-					int sum = this->digits[i] * other.digits[j] + product[i_this + i_other] + carry;
+					int sum = (*this->digits)[i] * (*other.digits)[j] + product[i_this + i_other] + carry;
 					carry = sum / base;
 					product[i_this + i_other] = sum % base;
 					i_other++;
@@ -393,7 +396,7 @@ class Integer {
 		}
 };
 
-void generate_integer(vector<int8_t> bin, int len) {
+void generate_integer(vector<int8_t> * bin, int len) {
 
 	// Seed with a real random value, if available
     random_device r;
@@ -401,11 +404,11 @@ void generate_integer(vector<int8_t> bin, int len) {
     default_random_engine e1(r());
     uniform_int_distribution<int8_t> uniform_dist_(1, 9);
     
-	bin[0] = uniform_dist_(e1);
+	(*bin)[0] = uniform_dist_(e1);
 
     uniform_int_distribution<int> uniform_dist(0, 9);
 	for (int i=1; i < len; i++) {
-		bin[i] = uniform_dist(e1);
+		(*bin)[i] = uniform_dist(e1);
 	}
 }
 
@@ -481,9 +484,8 @@ int main(int argc, char* argv[]) {
 	// cout << "Initialized execution time: " << execution_time_naive.count() << endl;
 	int execution_time_big = 0;
 	auto limit = 1 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
-	limit /= 2;
+	// limit /= 2;
 
-	Integer X, Y;
 	int num_digits = 1;
 
 	// Data Collection
@@ -533,18 +535,20 @@ int main(int argc, char* argv[]) {
 	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
 	while (execution_time_big < limit) {
 	// while (num_digits < 5) {
+		Integer X, Y;
+
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
 		// int digitsX[num_digits];
 		// int digitsY[num_digits];
 		vector<int8_t> digitsX (num_digits, 0);
 		vector<int8_t> digitsY (num_digits, 0);
-		generate_integer(digitsX, num_digits);
-		generate_integer(digitsY, num_digits);
+		generate_integer(&digitsX, num_digits);
+		generate_integer(&digitsY, num_digits);
 		// print_array(digitsX, num_digits, "digitsX: ");
 		// print_array(digitsY, num_digits, "digitsY: ");
-		X.set_digits(digitsX, num_digits);
-		Y.set_digits(digitsY, num_digits);
+		X.set_digits(&digitsX, num_digits);
+		Y.set_digits(&digitsY, num_digits);
 		
 		// Get starting timepoint
 		auto start = high_resolution_clock::now();
@@ -559,11 +563,15 @@ int main(int argc, char* argv[]) {
 			 << execution_time_big << " milliseconds" << endl;
 
 		cout << "Size of digitsX array [bytes I hope]: "
-			 << sizeof(std::vector<int>) + (sizeof(int) * digitsX.size()) << endl;
+			 << sizeof(std::vector<int8_t>) + (sizeof(int8_t) * digitsX.size()) << endl;
 
 		data << num_digits << ", " << execution_time_big << "\n";
 		
 		num_digits *= 2;
+		// delete[] &digitsX;
+		// delete[] &digitsY;
+		// delete[] &X;
+		// delete[] &Y;
 	}
 	data.close();
 
