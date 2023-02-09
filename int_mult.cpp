@@ -15,7 +15,7 @@ using namespace std::chrono;
 class FFT {
 
 	public:
-		vector<int8_t> arr;
+		vector<int8_t> * arr;
 		int arr_len;
 
 		// Holds results of all [I]FFT calculations (NB: will be overwritten on each call to `this.fft`)
@@ -24,15 +24,17 @@ class FFT {
 
 		bool destroy_plan = true;
 
-		FFT(vector<int8_t> arr_, int arr_len_) {
+		FFT(vector<int8_t> * arr_, int arr_len_) {
 			arr_len = arr_len_;
 
 			arr = arr_;
 
 			// Initialize complex array with digits of arr
+
+			// TODO: Do the padding here to save space?
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			for (int i = 0; i < arr_len; i++) {
-				fft_arr[i][0] = arr[i];
+				fft_arr[i][0] = (*arr)[i];
 			}
 
 		}
@@ -41,8 +43,8 @@ class FFT {
 			// destroy_plan = false;
 			arr_len = arr_len_;
 
-			vector<int8_t> temp (arr_len, 0);
-			this->arr = temp;
+			// vector<int8_t> temp (arr_len, 0);
+			// this->arr = temp;
 
 
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
@@ -132,7 +134,9 @@ class FFT {
 				// TODO: set this->arr ?
 				for (int i = 0; i < arr_len; i++) {
 					// this->arr[i] = static_cast<int>(fft_arr[i][0]) / arr_len;
-					this->arr[i] = fft_arr[i][0] / arr_len;
+					// TODO: Saving space ig
+					// this->arr[i] = fft_arr[i][0] / arr_len;
+					fft_arr[i][0] = fft_arr[i][0] / arr_len;
 				}
 			} else {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
@@ -266,8 +270,8 @@ class Integer {
 			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
 			// FFT product ();
 
-			FFT f1 (this_digits, N);
-			FFT f2 (other_digits, N);
+			FFT f1 (&this_digits, N);
+			FFT f2 (&other_digits, N);
 
 			
 			f1.fft();
@@ -291,7 +295,8 @@ class Integer {
 				// printf("%3d\n", p.arr[i]);
 				power = p.arr_len - (i+2);
 				// cout << i << ": " << p.arr[i] << ", " << power << endl;
-				product += p.arr[i] * pow(10, power);
+				// product += (*p.arr)[i] * pow(10, power);
+				product += p.fft_arr[i][0] * pow(10, power);
 			}
 
 			// cout << "`big_mult` product: " << product << endl;
