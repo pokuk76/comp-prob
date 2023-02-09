@@ -6,6 +6,8 @@
 #include <random>
 #include <chrono>       /* time */
 #include <fstream>
+#include <vector>
+#include <algorithm>    // std::copy
 
 using namespace std;
 using namespace std::chrono;
@@ -13,7 +15,7 @@ using namespace std::chrono;
 class FFT {
 
 	public:
-		vector<int> arr;
+		vector<int8_t> arr;
 		int arr_len;
 
 		// Holds results of all [I]FFT calculations (NB: will be overwritten on each call to `this.fft`)
@@ -22,25 +24,29 @@ class FFT {
 
 		bool destroy_plan = true;
 
-		FFT(vector<int> arr_, int arr_len_) {
+		FFT(vector<int8_t> arr_, int arr_len_) {
 			arr_len = arr_len_;
 
-			// arr = arr_;
 			arr = arr_;
 
 			// Initialize complex array with digits of arr
+			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			for (int i = 0; i < arr_len; i++) {
 				fft_arr[i][0] = arr[i];
 			}
 
 		}
 
-		FFT(vector<fftw_complex> fft_arr_, int arr_len_) {
+		FFT(fftw_complex * fft_arr_, int arr_len_) {
 			// destroy_plan = false;
 			arr_len = arr_len_;
 
+			vector<int8_t> temp (arr_len, 0);
+			this->arr = temp;
 
-			fft_arr = fft_arr_;			
+
+			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
+			memcpy(fft_arr, fft_arr_, sizeof(fftw_complex) * arr_len);		
 			// cout << "\n\nTesting..." << endl;
 			// for (int i = 0; i < arr_len; i++) {
 			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
@@ -173,7 +179,8 @@ class FFT {
 class Integer {
 
 	public:
-		int * digits = NULL;
+		// int * digits = NULL;
+		vector<int8_t> digits;
 		int len;
 		// Naive v.s. FFT implementations
 		// TODO: Make this better? 
@@ -190,36 +197,38 @@ class Integer {
 			len = len_;
 		}
 
-		Integer(int * digits_, int len_) {
+		Integer(vector<int8_t> digits_, int len_) {
 			len = len_;
 
-			digits = (int *) malloc(sizeof(int) * len);
-			// *digits = *digits_;
-			memcpy(digits, digits_, sizeof(int)*len);
+			// digits = (int *) malloc(sizeof(int) * len);
+			digits = digits_;
+			// memcpy(digits, digits_, sizeof(int)*len);
 		}
 
 		Integer(int digits_, int len_) {
-			digits = (int *) malloc(sizeof(int) * len_);
-			// *digits = *digits_;
-			*digits = digits_;
+			// digits = (int *) malloc(sizeof(int) * len_);
+			// digits = digits_;
+			// *digits = digits_;
 			len = len_;
 		}
 
-		~Integer() {
-			if (digits){
-				free(digits);
-			}
-		}
+		// ~Integer() {
+		// 	if (digits){
+		// 		free(digits);
+		// 	}
+		// }
 
-		void set_digits(int * digits_, int num_digits=-1){
-			if (this->digits) {
-				free(this->digits);
-			}
+		// void set_digits(int * digits_, int num_digits=-1){
+		void set_digits(vector<int8_t> digits_, int num_digits=-1){
+			// if (this->digits) {
+			// 	free(this->digits);
+			// }
 			if (!(num_digits==-1)) {
 				this->len = num_digits;
 			}
-			digits = (int *) malloc(sizeof(int) * this->len);
-			memcpy(digits, digits_, sizeof(int)*this->len);
+			// digits = (int *) malloc(sizeof(int) * this->len);
+			// memcpy(digits, digits_, sizeof(int)*this->len);
+			digits = digits_;
 			
 		}
 
@@ -238,13 +247,11 @@ class Integer {
 			/* Do the padding */
 			// TODO: Assuming this and other are of equal length
 			int N = this->len * 2;
-			// int * this_digits[N];
-			// int * other_digits[N];
-			int * this_digits = (int *) calloc(N, sizeof(int));
-			int * other_digits = (int *) calloc(N, sizeof(int));
-
-			memcpy(this_digits, this->digits, sizeof(int) * this->len);
-			memcpy(other_digits, other.digits, sizeof(int) * other.len);
+			vector<int8_t> this_digits(N, 0);
+			vector<int8_t> other_digits(N, 0);
+			// <https://cplusplus.com/reference/algorithm/copy/>
+			copy( this->digits.begin(), this->digits.begin()+this->len, this_digits.begin() );
+			copy( other.digits.begin(), other.digits.begin()+other.len, other_digits.begin() );
 
 			// cout << "Printing memcpy..." << endl;
 			// printf("Padding [2, 3]: [");
@@ -289,11 +296,11 @@ class Integer {
 
 			// cout << "`big_mult` product: " << product << endl;
 
-			free(fft_product);
 
 			/* CLEAN UP */
-			free(this_digits);
-			free(other_digits);
+			// free(this_digits);
+			// free(other_digits);
+			free(fft_product);
 		}
 
 		/**
@@ -350,6 +357,9 @@ class Integer {
 			// 	cout << product[i];
 			// }
 			// cout << endl;
+
+			// Cleanup
+			free(product);
 		}
 
 		/**
@@ -378,13 +388,13 @@ class Integer {
 		}
 };
 
-void generate_integer(int* bin, int len) {
+void generate_integer(vector<int8_t> bin, int len) {
 
 	// Seed with a real random value, if available
     random_device r;
     // Choose a random mean between 1 and 6
     default_random_engine e1(r());
-    uniform_int_distribution<int> uniform_dist_(1, 9);
+    uniform_int_distribution<int8_t> uniform_dist_(1, 9);
     
 	bin[0] = uniform_dist_(e1);
 
@@ -400,13 +410,7 @@ void test_generate_integer() {
 	int n = 8;
 	int bin[n];
 
-	generate_integer(bin, n);	
-}
-
-void pad(int * in, int in_len, int * pad_out, int pad_len) {
-
-	float l[4];
-	return;
+	// generate_integer(bin, n);	
 }
 
 
@@ -436,16 +440,16 @@ int main(int argc, char* argv[]) {
 
 
 	// big_mult("a", "b");
-	int a[8] = {2, 3, 9, 5, 8, 2, 3, 3};
-	int b[4] = {5, 8, 3, 0};
+	// int a[8] = {2, 3, 9, 5, 8, 2, 3, 3};
+	// int b[4] = {5, 8, 3, 0};
 	
-	Integer A (a, 8);
-	cout << "A: ";
-	A.print_int();
+	// Integer A (a, 8);
+	// cout << "A: ";
+	// A.print_int();
 
-	Integer B (b, 4);
-	cout << "B: ";
-	B.print_int();
+	// Integer B (b, 4);
+	// cout << "B: ";
+	// B.print_int();
 	
 	// Integer C = A * B;
 	// C.print_int();
@@ -472,6 +476,7 @@ int main(int argc, char* argv[]) {
 	// cout << "Initialized execution time: " << execution_time_naive.count() << endl;
 	int execution_time_big = 0;
 	auto limit = 1 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
+	limit /= 2;
 
 	Integer X, Y;
 	int num_digits = 1;
@@ -525,8 +530,10 @@ int main(int argc, char* argv[]) {
 	// while (num_digits < 5) {
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
-		int digitsX[num_digits];
-		int digitsY[num_digits];
+		// int digitsX[num_digits];
+		// int digitsY[num_digits];
+		vector<int8_t> digitsX (num_digits, 0);
+		vector<int8_t> digitsY (num_digits, 0);
 		generate_integer(digitsX, num_digits);
 		generate_integer(digitsY, num_digits);
 		// print_array(digitsX, num_digits, "digitsX: ");
@@ -543,8 +550,11 @@ int main(int argc, char* argv[]) {
 		auto stop = high_resolution_clock::now();
 		// Get duration
 		execution_time_big = duration_cast<milliseconds>(stop - start).count();
-		// cout << "Time taken by function: "
-		// 	 << execution_time_big.count() << " milliseconds" << endl;
+		cout << "Time taken by function: "
+			 << execution_time_big << " milliseconds" << endl;
+
+		cout << "Size of digitsX array [bytes I hope]: "
+			 << sizeof(std::vector<int>) + (sizeof(int) * digitsX.size()) << endl;
 
 		data << num_digits << ", " << execution_time_big << "\n";
 		

@@ -296,7 +296,7 @@ class Integer {
 
 			// cout << "`big_mult` product: " << product << endl;
 
-			// free(fft_product);
+			free(fft_product);
 
 			/* CLEAN UP */
 			free(this_digits);

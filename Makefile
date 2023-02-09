@@ -4,6 +4,9 @@ all : int_mult
 int_mult : int_mult.cpp
 		g++ int_mult.cpp -o int_mult -lfftw3 -lm
 
+debug : int_mult.cpp
+		g++ -static -g int_mult.cpp -o debug -lfftw3 -lm
+
 client_wloop : client_wloop.cpp
 		g++ -pthread client_wloop.cpp -o client_wloop
 
