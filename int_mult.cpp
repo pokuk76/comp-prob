@@ -5,6 +5,7 @@
 #include <math.h>
 #include <random>
 #include <chrono>       /* time */
+#include <fstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -313,11 +314,12 @@ class Integer {
 			int len_p = this->len + other.len;
 			// int product[len_p];
 			int * product = (int *) calloc(len_p, sizeof(int));
-			for (int i = 0; i<len_p; i++) {
-				// product[i] = 0;
-				cout << product[i];
-			}
-			cout << endl;
+			// Print product to make sure its 0s
+			// for (int i = 0; i<len_p; i++) {
+			// 	// product[i] = 0;
+			// 	cout << product[i];
+			// }
+			// cout << endl;
 
 			int i_this = 0;
 			int i_other = 0;
@@ -348,10 +350,11 @@ class Integer {
     //     result = join(string.(reverse_product))
     // end
 
-			for (int i = 0; i<len_p; i++) {
-				cout << product[i];
-			}
-			cout << endl;
+			// Print product
+			// for (int i = 0; i<len_p; i++) {
+			// 	cout << product[i];
+			// }
+			// cout << endl;
 		}
 
 		/**
@@ -396,6 +399,15 @@ void generate_integer(int* bin, int len) {
 	}
 }
 
+
+void test_generate_integer() {
+	// Test integer generation
+	int n = 8;
+	int bin[n];
+
+	generate_integer(bin, n);	
+}
+
 void pad(int * in, int in_len, int * pad_out, int pad_len) {
 
 	float l[4];
@@ -422,7 +434,6 @@ void print_array(int * bin, int n, string term="") {
 }
 
 int main(int argc, char* argv[]) {
-
 	// string a = "23958233";
 	// string b = "5830";
 	// cout << "a: " << a << " | b: " << b << endl;
@@ -458,23 +469,26 @@ int main(int argc, char* argv[]) {
 	// FFT p (b, 4);
 	// p.fft();
 
-	// Test integer generation
-	int n = 8;
-	int bin[n];
-
-	generate_integer(bin, n);
-
-	
-
 	/* Experiment */
+
 	// auto execution_time = 0;  // In microseconds
-	chrono::milliseconds execution_time;  // In microseconds
-	auto limit = 10 * (60 * pow(10, 6));  // 10 minutes in microseconds (I hope)
+	chrono::milliseconds execution_time_naive;  // In milliseconds
+	chrono::milliseconds execution_time_big;
+	auto limit = 10 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
 
 	Integer X, Y;
 	int num_digits = 1;
+
+	// Data Collection
+	ofstream data;
+	string naive_file = "n_squared_cpp.csv";
+	string big_file = "n_logn_cpp.csv";
+
+	cout << "NAIVE_MULT" << endl;
+	data.open(naive_file);
+	data << "NUM_DIGITS, EXECUTION_TIME_NSQUARED_S\n";
 	// while (execution_time < limit) {
-	while (num_digits == 1) {
+	while (num_digits < 5) {
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
 		int digitsX[num_digits];
@@ -486,7 +500,6 @@ int main(int argc, char* argv[]) {
 		X.set_digits(digitsX, num_digits);
 		Y.set_digits(digitsY, num_digits);
 		
-        cout << "NAIVE_MULT" << endl;
 		// Get starting timepoint
 		auto start = high_resolution_clock::now();
 		// Call the function, here sort()
@@ -494,11 +507,48 @@ int main(int argc, char* argv[]) {
 		// Get ending timepoint
 		auto stop = high_resolution_clock::now();
 		// Get duration
-		execution_time = duration_cast<milliseconds>(stop - start);
+		execution_time_naive = duration_cast<milliseconds>(stop - start);
 		cout << "Time taken by function: "
-			 << execution_time.count() << " milliseconds" << endl;
+			 << execution_time_naive.count() << " milliseconds" << endl;
 		
 		num_digits *= 2;
 	}
+	data.close();
+
+    
+	cout << "BIG_MULT" << endl;
+	// Reset things
+	num_digits = 1;
+	data.open(big_file);
+	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN_S\n";
+	// while (execution_time_big < limit) {
+	while (num_digits < 5) {
+        cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
+
+		int digitsX[num_digits];
+		int digitsY[num_digits];
+		generate_integer(digitsX, num_digits);
+		generate_integer(digitsY, num_digits);
+		print_array(digitsX, num_digits, "digitsX: ");
+		print_array(digitsY, num_digits, "digitsY: ");
+		X.set_digits(digitsX, num_digits);
+		Y.set_digits(digitsY, num_digits);
+		
+		// Get starting timepoint
+		auto start = high_resolution_clock::now();
+		// Call the function, here sort()
+		X.big_mult(Y);
+		// Get ending timepoint
+		auto stop = high_resolution_clock::now();
+		// Get duration
+		execution_time_big = duration_cast<milliseconds>(stop - start);
+		cout << "Time taken by function: "
+			 << execution_time_big.count() << " milliseconds" << endl;
+
+		data << num_digits << ", " << execution_time_big.count() << "\n";
+		
+		num_digits *= 2;
+	}
+	data.close();
 
 }

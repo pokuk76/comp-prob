@@ -123,11 +123,9 @@ function main()
 
     # Data collection arrays
     execution_time_naive = Vector{Float64}()
-    products_naive = Vector{String}()
     execution_time_big = Vector{Float64}()
     num_digits_arr = Vector{Int64}()
-    inputs_X = Vector{String}()
-    inputs_Y = Vector{String}()
+
 
     while execution_time < limit
     # while num_digits < 5
@@ -139,8 +137,6 @@ function main()
         # println("X: $X | Y: $Y")
 
         push!(num_digits_arr, num_digits)
-        # push!(inputs_X, join(X))
-        # push!(inputs_Y, join(Y))
 		
 
         # println("BIG_MULT")
@@ -158,7 +154,6 @@ function main()
 		# println("\tExecution time [s]: $execution_time")
         # append value to array before overwriting it
         push!(execution_time_naive, execution_time)
-        push!(products_naive, result)
 
 		
 		num_digits *= 2
