@@ -487,6 +487,8 @@ int main(int argc, char* argv[]) {
 	// limit /= 2;
 
 	int num_digits = 1;
+	Integer X, Y;
+
 
 	// Data Collection
 	ofstream data;
@@ -535,7 +537,7 @@ int main(int argc, char* argv[]) {
 	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
 	while (execution_time_big < limit) {
 	// while (num_digits < 5) {
-		Integer X, Y;
+		// Integer X, Y;
 
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
