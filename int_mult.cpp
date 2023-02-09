@@ -13,7 +13,7 @@ using namespace std::chrono;
 class FFT {
 
 	public:
-		int * arr;
+		vector<int> arr;
 		int arr_len;
 
 		// Holds results of all [I]FFT calculations (NB: will be overwritten on each call to `this.fft`)
@@ -22,15 +22,12 @@ class FFT {
 
 		bool destroy_plan = true;
 
-		FFT(int * arr_, int arr_len_) {
+		FFT(vector<int> arr_, int arr_len_) {
 			arr_len = arr_len_;
 
 			// arr = arr_;
-			arr = (int *) malloc(sizeof(int) * arr_len);
-			memcpy(arr, arr_, sizeof(int) * arr_len);
+			arr = arr_;
 
-
-			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			// Initialize complex array with digits of arr
 			for (int i = 0; i < arr_len; i++) {
 				fft_arr[i][0] = arr[i];
@@ -38,15 +35,12 @@ class FFT {
 
 		}
 
-		FFT(fftw_complex * fft_arr_, int arr_len_) {
+		FFT(vector<fftw_complex> fft_arr_, int arr_len_) {
 			// destroy_plan = false;
 			arr_len = arr_len_;
 
-			arr = (int *) malloc(sizeof(int) * arr_len);
 
-			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
-			memcpy(fft_arr, fft_arr_, sizeof(fftw_complex) * arr_len);
-			
+			fft_arr = fft_arr_;			
 			// cout << "\n\nTesting..." << endl;
 			// for (int i = 0; i < arr_len; i++) {
 			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
@@ -59,7 +53,6 @@ class FFT {
 			// }
 			fftw_destroy_plan(p);
 			fftw_free(fft_arr);
-			free(arr);
 
 		}
 
@@ -123,7 +116,7 @@ class FFT {
 		 * @return fftw_complex* 
 		 */
 		// fftw_complex * fft(int * arr, int arr_len, bool inverse) {
-		fftw_complex * fft(bool inverse = false) {
+		void fft(bool inverse = false) {
 
 			// In either case, carry of FT in place
 			if (inverse) {
@@ -143,7 +136,7 @@ class FFT {
 
 			// cout << "Printing fft result..." << endl;
 			// this->print_fftw();
-			return fft_arr;
+			// return fft_arr;
 
 		}
 
@@ -296,7 +289,7 @@ class Integer {
 
 			// cout << "`big_mult` product: " << product << endl;
 
-			// free(fft_product);
+			free(fft_product);
 
 			/* CLEAN UP */
 			free(this_digits);
