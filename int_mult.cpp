@@ -15,7 +15,7 @@ using namespace std::chrono;
 class FFT {
 
 	public:
-		vector<int8_t> * arr;
+		int8_t * arr;
 		int arr_len;
 
 		// Holds results of all [I]FFT calculations (NB: will be overwritten on each call to `this.fft`)
@@ -24,7 +24,7 @@ class FFT {
 
 		bool destroy_plan = true;
 
-		FFT(vector<int8_t> * arr_, int arr_len_) {
+		FFT(int8_t * arr_, int arr_len_) {
 			arr_len = arr_len_;
 
 			arr = arr_;
@@ -35,7 +35,7 @@ class FFT {
 			int pad_len = 2 * arr_len;
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pad_len);
 			for (int i = 0; i < arr_len; i++) {
-				fft_arr[i][0] = (*arr)[i];
+				fft_arr[i][0] = arr[i];
 			}
 			for (int i = arr_len; i < pad_len; i++) {
 				fft_arr[i][0] = 0;
@@ -190,7 +190,7 @@ class Integer {
 
 	public:
 		// int * digits = NULL;
-		vector<int8_t> * digits;
+		int8_t * digits;
 		int len;
 		// Naive v.s. FFT implementations
 		// TODO: Make this better? 
@@ -207,7 +207,7 @@ class Integer {
 			len = len_;
 		}
 
-		Integer(vector<int8_t> * digits_, int len_) {
+		Integer(int8_t * digits_, int len_) {
 			len = len_;
 
 			// digits = (int *) malloc(sizeof(int) * len);
@@ -229,7 +229,7 @@ class Integer {
 		// }
 
 		// void set_digits(int * digits_, int num_digits=-1){
-		void set_digits(vector<int8_t> * digits_, int num_digits=-1){
+		void set_digits(int8_t * digits_, int num_digits=-1){
 			// if (this->digits) {
 			// 	free(this->digits);
 			// }
@@ -245,7 +245,7 @@ class Integer {
 
 		void print_int() {
 			for (int i = 0; i < this->len; i++) {
-				cout << (*digits)[i];
+				cout << digits[i];
 			}
 			cout << endl;
 		}
@@ -339,7 +339,7 @@ class Integer {
 				carry = 0;
 				i_other = 0;
 				for (int i = this->len - 1; i >= 0; i--) {
-					int sum = (*this->digits)[i] * (*other.digits)[j] + product[i_this + i_other] + carry;
+					int sum = this->digits[i] * other.digits[j] + product[i_this + i_other] + carry;
 					carry = sum / base;
 					product[i_this + i_other] = sum % base;
 					i_other++;
@@ -396,7 +396,7 @@ class Integer {
 		}
 };
 
-void generate_integer(vector<int8_t> * bin, int len) {
+void generate_integer(int8_t * bin, int len) {
 
 	// Seed with a real random value, if available
     random_device r;
@@ -404,11 +404,11 @@ void generate_integer(vector<int8_t> * bin, int len) {
     default_random_engine e1(r());
     uniform_int_distribution<int8_t> uniform_dist_(1, 9);
     
-	(*bin)[0] = uniform_dist_(e1);
+	bin[0] = uniform_dist_(e1);
 
     uniform_int_distribution<int> uniform_dist(0, 9);
 	for (int i=1; i < len; i++) {
-		(*bin)[i] = uniform_dist(e1);
+		bin[i] = uniform_dist(e1);
 	}
 }
 
@@ -541,16 +541,16 @@ int main(int argc, char* argv[]) {
 
         cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
 
-		// int digitsX[num_digits];
-		// int digitsY[num_digits];
-		vector<int8_t> digitsX (num_digits, 0);
-		vector<int8_t> digitsY (num_digits, 0);
-		generate_integer(&digitsX, num_digits);
-		generate_integer(&digitsY, num_digits);
+		int8_t * digitsX = (int8_t *) calloc(num_digits, sizeof(int8_t));
+		int8_t * digitsY = (int8_t *) calloc(num_digits, sizeof(int8_t));
+		// vector<int8_t> digitsX (num_digits, 0);
+		// vector<int8_t> digitsY (num_digits, 0);
+		generate_integer(digitsX, num_digits);
+		generate_integer(digitsY, num_digits);
 		// print_array(digitsX, num_digits, "digitsX: ");
 		// print_array(digitsY, num_digits, "digitsY: ");
-		X.set_digits(&digitsX, num_digits);
-		Y.set_digits(&digitsY, num_digits);
+		X.set_digits(digitsX, num_digits);
+		Y.set_digits(digitsY, num_digits);
 		
 		// Get starting timepoint
 		auto start = high_resolution_clock::now();
@@ -564,8 +564,8 @@ int main(int argc, char* argv[]) {
 		cout << "Time taken by function: "
 			 << execution_time_big << " milliseconds" << endl;
 
-		cout << "Size of digitsX array [bytes I hope]: "
-			 << sizeof(std::vector<int8_t>) + (sizeof(int8_t) * digitsX.size()) << endl;
+		// cout << "Size of digitsX array [bytes I hope]: "
+		// 	 << sizeof(std::vector<int8_t>) + (sizeof(int8_t) * digitsX.size()) << endl;
 
 		data << num_digits << ", " << execution_time_big << "\n";
 		
@@ -574,6 +574,8 @@ int main(int argc, char* argv[]) {
 		// delete[] &digitsY;
 		// delete[] &X;
 		// delete[] &Y;
+		free(digitsX);
+		free(digitsY);
 	}
 	data.close();
 
