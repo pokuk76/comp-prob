@@ -1,6 +1,3 @@
-# using Pkg
-# Pkg.add("FFTW")
-
 using FFTW
 using TickTock
 using CSV
@@ -16,8 +13,8 @@ function naive_mult(f1, f2, len_f1, len_f2)
     # product = zeros(Int8, len_p, 1)
     product = zeros(Int64, len_p)
 
-    println("f1: $f1")
-    println("f2: $f2")
+    # println("f1: $f1")
+    # println("f2: $f2")
 
     i_this = 0
     i_other = 1
@@ -42,39 +39,31 @@ function naive_mult(f1, f2, len_f1, len_f2)
         result = join(string.(reverse_product))
     end
 
-    println("reverse_product: $reverse_product")
-    println("Result: $result")
+    # println("reverse_product: $reverse_product")
+    # println("Result: $result")
     return result
 end
 
 function big_mult(X, Y, len)
     base = 10
     
-    # TODO: Padding
     fft_len = 2*len
     x = zeros(Int64, fft_len)
     x[1:len] = X
     y = zeros(Int64, fft_len)
     y[1:len] = Y
 
-    println("Padded X: $x")
+    # println("Padded X: $x")
 
 
     fft_x = fft(x)
-    # println("fft: $fft_n")
     fft_y = fft(y)
 
     # Element-wise multiplication of the arrays of complex numbers
     fft_p = fft_x .* fft_y
-    # println("fft: $fft_p")
 
     # Array
     p = ifft(fft_p)
-    # println("fft: $p")
-
-    # r = p[1]*100 + p[2]*10 + p[3]  # huh... don't fully understand this carry
-    # # Oh wait I do
-    # println("fft: $r")
 
     # product = zeros(Int8, len-1)
     product = ""
@@ -82,13 +71,16 @@ function big_mult(X, Y, len)
     for i=1:fft_len-1
         # printf("%3d\n", p.arr[i]);
         power = (fft_len-1) - i;
-        var = p[i]
-        println("$i: $var, $power");
-        product_int += convert(Int64, p[i]) * (base^power)
+        # var = p[i]
+        # println("$i: $var, $power");
+
+        # product_int += convert(Int64, p[i]) * (base^power)
+        # There was an `InexactError: Int64(13.999999999999996)` error one time
+        product_int += round(Int64, real(p[i])) * (base^power)
     end
-    println("Product_int: $product_int")
+    # println("Product_int: $product_int")
     product = string(product_int)
-    println("Product: $product")
+    # println("Product: $product")
 
     return product
 end
@@ -98,7 +90,7 @@ function generate_integer(out, num_digits)
     out[2:end] = rand(0:9, num_digits-1)
 end
 
-function write_data(times, num_digits, inputs_X, inputs_Y, file_path)
+function write_data_(times, num_digits, inputs_X, inputs_Y, products, file_path)
     # TODO: I guess it would be good to check if the file already exists...
     touch(file_path)
     df = DataFrame(
@@ -106,78 +98,73 @@ function write_data(times, num_digits, inputs_X, inputs_Y, file_path)
         NUM_DIGITS = num_digits,
         INPUT_1 = inputs_X,
         INPUT_2 = inputs_Y,
-        # RESULT = products,
+        RESULT = products,
     )
-    println("Dataframe:")
-    println(df)
+    CSV.write(file_path, df)
+end
+
+function write_data(times_naive, times_big, num_digits, file_path)
+    # TODO: I guess it would be good to check if the file already exists...
+    touch(file_path)
+    df = DataFrame(
+        EXECUTION_TIME_NSQUARED_S = times_naive,
+        EXECUTION_TIME_NLOGN_S = times_big,
+        NUM_DIGITS = num_digits
+    )
     CSV.write(file_path, df)
 end
 
 function main()
 
-    # Fake input
-    # n = [2; 3; 0; 0]
-    # m = [4; 1; 0; 0]
-    # big_mult(n, m, 4)
-
-    # f1 = [2, 3, 9, 5, 8, 2, 3, 3]
-    # len_f1 = 8
-	# f2 = [5, 8, 3, 0]
-    # len_f2 = 4
-    # naive_mult(reverse(f1), len_f1, reverse(f2), len_f2)
-
     # EXPERIMENT
     execution_time = 0;  # In seconds
-	limit = 10 * 60;  # 10 minutes in seconds (I hope)
+	limit = 1 * 60;  # 10 minutes in seconds (I hope)
 	num_digits = 1
 
     # Data collection arrays
     execution_time_naive = Vector{Float64}()
+    products_naive = Vector{String}()
     execution_time_big = Vector{Float64}()
     num_digits_arr = Vector{Int64}()
     inputs_X = Vector{String}()
     inputs_Y = Vector{String}()
-    # Nvm...
-    # # Leave it as a vector of arrays and do the processing in the write data function
-    # inputs_X = Vector{Array{Int64}}()
-    # inputs_Y = Vector{Array{Int64}}()
 
-    # while execution_time < limit
-    while num_digits < 3
+    while execution_time < limit
+    # while num_digits < 5
         println("\nNUMBER OF DIGITS: $num_digits")
 		X = zeros(Int64, num_digits)
         Y = zeros(Int64, num_digits)
 		generate_integer(X, num_digits)
 		generate_integer(Y, num_digits)
-        println("X: $X | Y: $Y")
+        # println("X: $X | Y: $Y")
 
         push!(num_digits_arr, num_digits)
-        push!(inputs_X, join(X))
-        push!(inputs_Y, join(Y))
-        # push!(inputs_X, X)
-        # push!(inputs_Y, Y)
+        # push!(inputs_X, join(X))
+        # push!(inputs_Y, join(Y))
 		
-        println("NAIVE_MULT")
-		# Execution Time (in seconds I believe...)
-        execution_time = @elapsed naive_mult(X, Y, num_digits, num_digits)
-        execution_time_ms = execution_time * 10^6  # convert to microseconds
-        # @printf "" typeof(execution_time)
-        # var = typeof(execution_time)
-        # println("$var")
-		println("\tExecution time [s]: $execution_time")
-        # append value to array before overwriting it
-        push!(execution_time_naive, execution_time)
 
-        println("BIG_MULT")
+        # println("BIG_MULT")
         execution_time = @elapsed big_mult(X, Y, num_digits)
         execution_time_ms = execution_time * 10^6  # convert to microseconds
-		println("\tExecution time [s]: $execution_time")
+		# println("\tExecution time [s]: $execution_time")
         push!(execution_time_big, execution_time)
+
+
+        # println("NAIVE_MULT")
+		# Execution Time (in seconds I believe...)
+        execution_time = @elapsed result = naive_mult(X, Y, num_digits, num_digits)
+        execution_time_ms = execution_time * 10^6  # convert to microseconds
+        # @printf "" typeof(execution_time)
+		# println("\tExecution time [s]: $execution_time")
+        # append value to array before overwriting it
+        push!(execution_time_naive, execution_time)
+        push!(products_naive, result)
 
 		
 		num_digits *= 2
 	end
-    write_data(execution_time_naive, num_digits_arr, inputs_X, inputs_Y, "test_naive.csv")
+    # write_data_(execution_time_naive, num_digits_arr, inputs_X, inputs_Y, products_naive, "test_naive.csv")
+    write_data(execution_time_naive, execution_time_big, num_digits_arr, "result_1min.csv")
 end
 
 function test_naive()
@@ -201,5 +188,6 @@ function test_big()
     # Execution Time (in seconds I believe...)
     execution_time = @elapsed big_mult(X, Y, num_digits)
 end
-main()
+
 # test_big()
+main()
