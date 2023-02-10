@@ -109,9 +109,13 @@ class FFT {
 
 			// Okay assuming the arrays are the same length
 			// R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
+			fftw_complex temp;
 			for (int i = 0; i < nx; i++) {
-				R[i][0] = A[i][0] * B[i][0] - A[i][1] * B[i][1];
-				R[i][1] = A[i][0] * B[i][1] + A[i][1] * B[i][0];
+				temp[0] = A[i][0] * B[i][0] - A[i][1] * B[i][1];
+				temp[1] = A[i][0] * B[i][1] + A[i][1] * B[i][0];
+				// In case its an inplace operation wrt one of the inputs 
+				R[i][0] = temp[0];
+				R[i][1] = temp[1];
 			}
 
 			// InputArray in = {R, nx*ny};
@@ -269,9 +273,10 @@ class Integer {
 			int product = 0;
 			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
 			// cout << "\tAllocating for fft_product..." << endl;
-			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * pad_N);
-			cout << "Size of fft_product [bytes I hope]: "
-				 << sizeof(fftw_complex *) + (sizeof(fftw_complex) * pad_N) << endl;
+			
+			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * pad_N);
+			// cout << "Size of fft_product [bytes I hope]: "
+			// 	 << sizeof(fftw_complex *) + (sizeof(fftw_complex) * pad_N) << endl;
 			// FFT product ();
 
 			// FFT f1 (&this_digits, N);
@@ -284,25 +289,27 @@ class Integer {
 			f2.fft();
 			
 			// fftw_complex * p = FFT::multiply(&f1, &f2, fft_product);
-			FFT::multiply(&f1, &f2, fft_product);
+			// FFT::multiply(&f1, &f2, fft_product);
+			FFT::multiply(&f1, &f2, f1.fft_arr);
 
 			// cout << "Printing multiplication result..." << endl;
 			// for (int i = 0; i < N; i++) {
 			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
 			// }
 
-			FFT p (fft_product, pad_N);
+			// FFT p (fft_product, pad_N);
 			// FFT p (other.digits, other.len);
 
 			// cout << "\nIFFT step: " << endl;
-			p.fft(true);
+			// p.fft(true);
+			f1.fft(true);
 			int power;
-			for (int i = 0; i < p.arr_len-1; i++) {
+			for (int i = 0; i < f1.arr_len-1; i++) {
 				// printf("%3d\n", p.arr[i]);
-				power = p.arr_len - (i+2);
+				power = f1.arr_len - (i+2);
 				// cout << i << ": " << p.arr[i] << ", " << power << endl;
 				// product += (*p.arr)[i] * pow(10, power);
-				product += p.fft_arr[i][0] * pow(10, power);
+				product += f1.fft_arr[i][0] * pow(10, power);
 			}
 
 			// cout << "`big_mult` product: " << product << endl;
@@ -311,7 +318,7 @@ class Integer {
 			/* CLEAN UP */
 			// free(this_digits);
 			// free(other_digits);
-			free(fft_product);
+			// free(fft_product);
 		}
 
 		/**
