@@ -4,13 +4,14 @@
 #include <fftw3.h>
 #include <math.h>
 #include <random>
-#include <chrono>       /* time */
+#include <chrono>
 #include <fstream>
-#include <vector>
-#include <algorithm>    // std::copy
 
 using namespace std;
 using namespace std::chrono;
+
+// 0 -> local, 1 -> ECE cluster, 2 -> AWS
+int platform = 0;
 
 class FFT {
 
@@ -30,8 +31,7 @@ class FFT {
 			arr = arr_;
 
 			// Initialize complex array with digits of arr
-
-			// TODO: Do the padding here to save space?
+			// TODO: Do the padding here to save space
 			int pad_len = 2 * arr_len;
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * pad_len);
 			for (int i = 0; i < arr_len; i++) {
@@ -46,25 +46,14 @@ class FFT {
 		FFT(fftw_complex * fft_arr_, int arr_len_) {
 			// Don't pad in this case
 
-			// destroy_plan = false;
 			arr_len = arr_len_;
-
-			// vector<int8_t> temp (arr_len, 0);
-			// this->arr = temp;
-
 
 			fft_arr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * arr_len);
 			memcpy(fft_arr, fft_arr_, sizeof(fftw_complex) * arr_len);		
-			// cout << "\n\nTesting..." << endl;
-			// for (int i = 0; i < arr_len; i++) {
-			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
-			// }
+
 		}
 
 		~FFT() {
-			// if (destroy_plan) {
-			// 	fftw_destroy_plan(p);
-			// }
 			fftw_destroy_plan(p);
 			fftw_free(fft_arr);
 
@@ -72,7 +61,6 @@ class FFT {
 
 		struct InputArray {
 			fftw_complex * f_arr;
-			// int * arr;
 			int len;
 		};
 
@@ -91,7 +79,6 @@ class FFT {
 				}
 				return;
 			}
-
 			for (int i = 0; i < arr_len; i++) {
 				printf("freq: %3d %+9.5f %+9.5f i\n", i, this->fft_arr[i][0], this->fft_arr[i][1]);
 			}
@@ -104,24 +91,16 @@ class FFT {
 			fftw_complex * B = b->fft_arr;
 			// fftw_complex * R;
 			int nx = a->arr_len;
-			int ny = 1;
-			double scale = 1.0 / (nx * ny);
 
 			// Okay assuming the arrays are the same length
-			// R = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * nx * ny);
 			fftw_complex temp;
 			for (int i = 0; i < nx; i++) {
+				// In case its an inplace operation wrt one of the inputs 
 				temp[0] = A[i][0] * B[i][0] - A[i][1] * B[i][1];
 				temp[1] = A[i][0] * B[i][1] + A[i][1] * B[i][0];
-				// In case its an inplace operation wrt one of the inputs 
 				R[i][0] = temp[0];
 				R[i][1] = temp[1];
 			}
-
-			// InputArray in = {R, nx*ny};
-			// print_fftw(in);
-			
-			// return (R);
 		}
 
 
@@ -133,18 +112,16 @@ class FFT {
 		 * @param inverse - 
 		 * @return fftw_complex* 
 		 */
-		// fftw_complex * fft(int * arr, int arr_len, bool inverse) {
 		void fft(bool inverse = false) {
 
 			// In either case, carry of FT in place
 			if (inverse) {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
 				fftw_execute(this->p);
-				// FFTW performs unnormalized Inverse FFT so...
-				// TODO: set this->arr ?
+				// FFTW performs unnormalized Inverse FFT so normalize
+				// TODO: set this->arr?
 				for (int i = 0; i < arr_len; i++) {
-					// this->arr[i] = static_cast<int>(fft_arr[i][0]) / arr_len;
-					// TODO: Saving space ig
+					// TODO: Saving space by doing things in place
 					// this->arr[i] = fft_arr[i][0] / arr_len;
 					fft_arr[i][0] = fft_arr[i][0] / arr_len;
 				}
@@ -152,11 +129,6 @@ class FFT {
 				p = fftw_plan_dft_1d(arr_len, fft_arr, fft_arr, FFTW_FORWARD, FFTW_ESTIMATE);
 				fftw_execute(this->p);
 			}
-			// fftw_execute(this->p);
-
-			// cout << "Printing fft result..." << endl;
-			// this->print_fftw();
-			// return fft_arr;
 
 		}
 
@@ -193,57 +165,32 @@ class FFT {
 class Integer {
 
 	public:
-		// int * digits = NULL;
 		int8_t * digits;
 		int len;
 		// Naive v.s. FFT implementations
-		// TODO: Make this better? 
+		// TODO: Make the class better? 
 		int mode;
 		int base = 10;
 
-		Integer() {}
-
-		// Integer(string digits_) {
-
-		// }
-
-		Integer(string digits_, int len_) {
-			len = len_;
+		Integer() {
+			len = 0;
+			digits = NULL;
 		}
 
 		Integer(int8_t * digits_, int len_) {
 			len = len_;
-
-			// digits = (int *) malloc(sizeof(int) * len);
 			digits = digits_;
-			// memcpy(digits, digits_, sizeof(int)*len);
 		}
 
 		Integer(int digits_, int len_) {
-			// digits = (int *) malloc(sizeof(int) * len_);
-			// digits = digits_;
-			// *digits = digits_;
 			len = len_;
 		}
 
-		// ~Integer() {
-		// 	if (digits){
-		// 		free(digits);
-		// 	}
-		// }
-
-		// void set_digits(int * digits_, int num_digits=-1){
 		void set_digits(int8_t * digits_, int num_digits=-1){
-			// if (this->digits) {
-			// 	free(this->digits);
-			// }
 			if (!(num_digits==-1)) {
 				this->len = num_digits;
 			}
-			// digits = (int *) malloc(sizeof(int) * this->len);
-			// memcpy(digits, digits_, sizeof(int)*this->len);
 			digits = digits_;
-			
 		}
 
 
@@ -254,33 +201,17 @@ class Integer {
 			cout << endl;
 		}
 
-		// int * big_mult(Integer const& other) {
 		void big_mult(Integer const& other, int * result=NULL) {
-			// int N = 4;
 
 			/* Do the padding */
 			// TODO: Assuming this and other are of equal length
 			int pad_N = this->len * 2;
 			int N = this->len;
-			// vector<int8_t> this_digits(N, 0);
-			// vector<int8_t> other_digits(N, 0);
 			// // <https://cplusplus.com/reference/algorithm/copy/>
-			// copy( this->digits.begin(), this->digits.begin()+this->len, this_digits.begin() );
-			// copy( other.digits.begin(), other.digits.begin()+other.len, other_digits.begin() );
 
 			
-			// kf
-			int product = 0;
-			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
-			// cout << "\tAllocating for fft_product..." << endl;
-			
-			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * pad_N);
-			// cout << "Size of fft_product [bytes I hope]: "
-			// 	 << sizeof(fftw_complex *) + (sizeof(fftw_complex) * pad_N) << endl;
-			// FFT product ();
+			int product = 0;  //kf
 
-			// FFT f1 (&this_digits, N);
-			// FFT f2 (&other_digits, N);
 			FFT f1 (this->digits, N);
 			FFT f2 (other.digits, N);
 
@@ -288,38 +219,18 @@ class Integer {
 			f1.fft();
 			f2.fft();
 			
-			// fftw_complex * p = FFT::multiply(&f1, &f2, fft_product);
-			// FFT::multiply(&f1, &f2, fft_product);
+			// Point-wise multiplication of complex numbers (in-place wrt f1)
 			FFT::multiply(&f1, &f2, f1.fft_arr);
 
-			// cout << "Printing multiplication result..." << endl;
-			// for (int i = 0; i < N; i++) {
-			// 	printf("freq: %3d %+9.5f %+9.5f i\n", i, fft_product[i][0], fft_product[i][1]);
-			// }
 
-			// FFT p (fft_product, pad_N);
-			// FFT p (other.digits, other.len);
-
-			// cout << "\nIFFT step: " << endl;
-			// p.fft(true);
-			f1.fft(true);
+			f1.fft(true);  // Inverse FFT
 			int power;
 			for (int i = 0; i < f1.arr_len-1; i++) {
-				// printf("%3d\n", p.arr[i]);
 				power = f1.arr_len - (i+2);
-				// cout << i << ": " << p.arr[i] << ", " << power << endl;
-				// product += (*p.arr)[i] * pow(10, power);
 				product += f1.fft_arr[i][0] * pow(10, power);
 			}
-
-			// cout << "`big_mult` product: " << product << endl;
-
-
-			/* CLEAN UP */
-			// free(this_digits);
-			// free(other_digits);
-			// free(fft_product);
 		}
+
 
 		/**
 		 * @brief 
@@ -329,17 +240,9 @@ class Integer {
 		 * @param product 
 		 * @return int* 
 		 */
-		// int * naive_mult(Integer const& other, int * product) const {
 		void naive_mult(Integer const& other, int * result=NULL) const {
 			int len_p = this->len + other.len;
-			// int product[len_p];
 			int * product = (int *) calloc(len_p, sizeof(int));
-			// Print product to make sure its 0s
-			// for (int i = 0; i<len_p; i++) {
-			// 	// product[i] = 0;
-			// 	cout << product[i];
-			// }
-			// cout << endl;
 
 			int i_this = 0;
 			int i_other = 0;
@@ -370,40 +273,10 @@ class Integer {
     //     result = join(string.(reverse_product))
     // end
 
-			// Print product
-			// for (int i = 0; i<len_p; i++) {
-			// 	cout << product[i];
-			// }
-			// cout << endl;
-
 			// Cleanup
 			free(product);
 		}
 
-		/**
-		 * @brief 
-		 * NB: this (i.e., LHS) takes precedence for type of multiplication carried out
-		 * 
-		 * @param rhs 
-		 * @return Integer 
-		 */
-		Integer operator*(Integer const& rhs) const {
-			// int len_p = this->len + rhs.len;
-			// int product[len_p];
-			// this->naive_mult(rhs, product);
-
-			// Integer p (product, len_p);
-			// return p;
-			int test[4] = {1, 2, 3, 4};
-			Integer t (*test, 4);
-			return t;
-		}
-
-    	Integer& operator*=(Integer const& rhs);
-
-		Integer& operator=(Integer const& other) {
-
-		}
 };
 
 void generate_integer(int8_t * bin, int len) {
@@ -425,21 +298,11 @@ void generate_integer(int8_t * bin, int len) {
 void test_generate_integer() {
 	// Test integer generation
 	int n = 8;
-	int bin[n];
+	int8_t bin[n];
 
-	// generate_integer(bin, n);	
+	generate_integer(bin, n);	
 }
 
-
-string naive_mult(string a, string b) {
-	int a_len = a.length();
-	int b_len = b.length();
-	string product (a_len+b_len, '0');
-	for (int i=0; i<a_len; i++) {
-		cout << a[i] - '0' << endl;
-	}
-	return product;
-}
 
 void print_array(int * bin, int n, string term="") {
 	cout << term << "[ ";
@@ -488,10 +351,17 @@ int main(int argc, char* argv[]) {
 	/* Experiment */
 
 	int execution_time_naive = 0;  // In milliseconds
-	// cout << "Initialized execution time: " << execution_time_naive.count() << endl;
 	int execution_time_big = 0;
+	double mem_big;
 	auto limit = 1 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
-	// limit /= 2;
+	double max_mem = 0; 
+	if (platform == 1) {
+		// ECE
+		max_mem = 0.6 * 32;  // In GBs
+	} else {
+		// local and AWS
+		max_mem = 0.6*16;
+	}
 
 	int num_digits = 1;
 	Integer X, Y;
@@ -542,7 +412,7 @@ int main(int argc, char* argv[]) {
 	num_digits = 1;
 	data.open(big_file);
 	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
-	while (execution_time_big < limit) {
+	while (num_digits < 134217728) {
 	// while (num_digits < 5) {
 		// Integer X, Y;
 
@@ -568,12 +438,13 @@ int main(int argc, char* argv[]) {
 		auto stop = high_resolution_clock::now();
 		// Get duration
 		execution_time_big = duration_cast<milliseconds>(stop - start).count();
+		mem_big = (2*sizeof(double) * num_digits) * pow(10, -9);
+		
 		cout << "Time taken by function: "
 			 << execution_time_big << " milliseconds" << endl;
 
-		// cout << "Size of digitsX array [bytes I hope]: "
-		// 	 << sizeof(std::vector<int8_t>) + (sizeof(int8_t) * digitsX.size()) << endl;
-
+		cout << "Size of FFTW array [gigabytes I hope]: "
+			 << mem_big << endl;
 		data << num_digits << ", " << execution_time_big << "\n";
 		
 		num_digits *= 2;
