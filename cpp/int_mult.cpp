@@ -323,7 +323,7 @@ class Integer {
 
 		/**
 		 * @brief 
-		 * TODO: Why this function has to be const <https://stackoverflow.com/questions/13103755/intellisense-the-object-has-type-qualifiers-that-are-not-compatible-with-the-me>
+		 * TODO: Why this function has to be const (if we call it from overloaded operator) <https://stackoverflow.com/questions/13103755/intellisense-the-object-has-type-qualifiers-that-are-not-compatible-with-the-me>
 		 * 
 		 * @param other 
 		 * @param product 
@@ -382,7 +382,7 @@ class Integer {
 
 		/**
 		 * @brief 
-		 * NB: this (i.e., LHS) takes precedent for type of multiplication carried out
+		 * NB: this (i.e., LHS) takes precedence for type of multiplication carried out
 		 * 
 		 * @param rhs 
 		 * @return Integer 
@@ -410,7 +410,6 @@ void generate_integer(int8_t * bin, int len) {
 
 	// Seed with a real random value, if available
     random_device r;
-    // Choose a random mean between 1 and 6
     default_random_engine e1(r());
     uniform_int_distribution<int8_t> uniform_dist_(1, 9);
     
@@ -488,8 +487,6 @@ int main(int argc, char* argv[]) {
 
 	/* Experiment */
 
-	// auto execution_time = 0;  // In microseconds
-	// chrono::milliseconds execution_time_naive;  // In milliseconds
 	int execution_time_naive = 0;  // In milliseconds
 	// cout << "Initialized execution time: " << execution_time_naive.count() << endl;
 	int execution_time_big = 0;
@@ -580,10 +577,6 @@ int main(int argc, char* argv[]) {
 		data << num_digits << ", " << execution_time_big << "\n";
 		
 		num_digits *= 2;
-		// delete[] &digitsX;
-		// delete[] &digitsY;
-		// delete[] &X;
-		// delete[] &Y;
 		free(digitsX);
 		free(digitsY);
 	}
