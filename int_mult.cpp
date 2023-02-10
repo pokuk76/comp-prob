@@ -268,7 +268,10 @@ class Integer {
 			// kf
 			int product = 0;
 			// fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * N);
+			// cout << "\tAllocating for fft_product..." << endl;
 			fftw_complex * fft_product = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * pad_N);
+			cout << "Size of fft_product [bytes I hope]: "
+				 << sizeof(fftw_complex *) + (sizeof(fftw_complex) * pad_N) << endl;
 			// FFT product ();
 
 			// FFT f1 (&this_digits, N);
