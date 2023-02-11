@@ -11,10 +11,7 @@ function naive_mult(f1, f2, len_f1, len_f2)
 
     len_p = len_f1 + len_f2
     # product = zeros(Int8, len_p, 1)
-    product = zeros(Int64, len_p)
-
-    # println("f1: $f1")
-    # println("f2: $f2")
+    product = zeros(Int32, len_p)
 
     i_this = 0
     i_other = 1
@@ -39,8 +36,6 @@ function naive_mult(f1, f2, len_f1, len_f2)
         result = join(string.(reverse_product))
     end
 
-    # println("reverse_product: $reverse_product")
-    # println("Result: $result")
     return result
 end
 
@@ -65,20 +60,15 @@ function big_mult(X, Y, len)
     # Array
     p = ifft(fft_p)
 
-    # product = zeros(Int8, len-1)
     product = ""
     product_int = 0
     for i=1:fft_len-1
-        # printf("%3d\n", p.arr[i]);
         power = (fft_len-1) - i;
-        # var = p[i]
-        # println("$i: $var, $power");
 
         # product_int += convert(Int64, p[i]) * (base^power)
-        # There was an `InexactError: Int64(13.999999999999996)` error one time
+        # Account for `InexactError: Int64(13.999999999999996)` error that one time
         product_int += round(Int64, real(p[i])) * (base^power)
     end
-    # println("Product_int: $product_int")
     product = string(product_int)
     # println("Product: $product")
 
@@ -103,11 +93,11 @@ function write_data_(times, num_digits, inputs_X, inputs_Y, products, file_path)
     CSV.write(file_path, df)
 end
 
-function write_data(times_naive, num_digits, file_path)
+function write_data(times, num_digits, file_path)
     # TODO: I guess it would be good to check if the file already exists...
     touch(file_path)
     df = DataFrame(
-        EXECUTION_TIME_NSQUARED_S = times_naive,
+        EXECUTION_TIME_SECONDS = times,
         # EXECUTION_TIME_NLOGN_S = times_big,
         NUM_DIGITS = num_digits
     )
@@ -131,12 +121,12 @@ function main()
 	big_file = "n_logn_jl.csv"
 
 
-    println("NAIVE_MULT")
+    println("--------------NAIVE_MULT----------------")
     while execution_time_naive < limit
-    # while num_digits < 5
-        println("\nNUMBER OF DIGITS: $num_digits")
+        println("NUMBER OF DIGITS: $num_digits")
 		X = zeros(Int8, num_digits)
         Y = zeros(Int8, num_digits)
+
 		generate_integer(X, num_digits)
 		generate_integer(Y, num_digits)
         # println("X: $X | Y: $Y")
@@ -147,7 +137,6 @@ function main()
 		# Execution Time (in seconds I believe...)
         execution_time_naive = @elapsed result = naive_mult(X, Y, num_digits, num_digits)
         execution_time_naive_ms = execution_time_naive * 10^6  # convert to microseconds
-        # @printf "" typeof(execution_time)
 		println("\tExecution time [s]: $execution_time_naive\n")
         # append value to array before overwriting it
         push!(execution_times_naive, execution_time_naive)
@@ -157,29 +146,29 @@ function main()
 	end
     write_data(execution_times_naive, num_digits_arr, naive_file)
 
-    println("BIG_MULT")
-    while execution_time_big < limit
-    # while num_digits < 5
-        println("\nNUMBER OF DIGITS: $num_digits")
+    # Reset things
+    num_digits=1
+    println("\n-------------------BIG_MULT-------------------")
+    # while execution_time_big < limit
+    while num_digits < 257
+        println("NUMBER OF DIGITS: $num_digits")
         X = zeros(Int8, num_digits)
         Y = zeros(Int8, num_digits)
         generate_integer(X, num_digits)
         generate_integer(Y, num_digits)
-        # println("X: $X | Y: $Y")
 
         push!(num_digits_arr, num_digits)
         
 
-        println("BIG_MULT")
         execution_time_big = @elapsed big_mult(X, Y, num_digits)
-        execution_time_big_ms = execution_time_big * 10^6  # convert to microseconds
+        # execution_time_big_ms = execution_time_big * 10^6  # convert to microseconds
         println("\tExecution time [s]: $execution_time_big\n")
         push!(execution_times_big, execution_time_big)
         
         num_digits *= 2
     end
     # write_data_(execution_times_naive, num_digits_arr, inputs_X, inputs_Y, products_naive, "test_naive.csv")
-    write_data(execution_times_naive, execution_times_big, num_digits_arr, big_file)
+    write_data(execution_times_big, num_digits_arr, big_file)
 end
 
 function test_naive()

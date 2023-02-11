@@ -266,12 +266,10 @@ class Integer {
 
 			// Product is reversed
 			if (product[len_p-1] == 0) {
-				// If last element of array (i.e. first digit) is 0, throw away
+				// If last element of array (i.e. first digit) is 0, discard
+			} else {
+				// the whole array is valid
 			}
-    //     result = join(string.(reverse_product[2:len_p]))
-    // else
-    //     result = join(string.(reverse_product))
-    // end
 
 			// Cleanup
 			free(product);
@@ -313,40 +311,6 @@ void print_array(int * bin, int n, string term="") {
 }
 
 int main(int argc, char* argv[]) {
-	// string a = "23958233";
-	// string b = "5830";
-	// cout << "a: " << a << " | b: " << b << endl;
-	// naive_mult(a, b);
-
-
-	// big_mult("a", "b");
-	// int a[8] = {2, 3, 9, 5, 8, 2, 3, 3};
-	// int b[4] = {5, 8, 3, 0};
-	
-	// Integer A (a, 8);
-	// cout << "A: ";
-	// A.print_int();
-
-	// Integer B (b, 4);
-	// cout << "B: ";
-	// B.print_int();
-	
-	// Integer C = A * B;
-	// C.print_int();
-	// A.naive_mult(B);
-	// A.naive_mult2(B);
-
-	/* Big Mult Test */
-
-	int x[4] = {2, 3};
-	int y[4] = {4, 1};
-
-	// Integer X (x, 2);
-	// Integer Y (y, 2);
-	// X.big_mult(Y);
-
-	// FFT p (b, 4);
-	// p.fft();
 
 	/* Experiment */
 
@@ -372,51 +336,52 @@ int main(int argc, char* argv[]) {
 	string naive_file = "n_squared_cpp.csv";
 	string big_file = "n_logn_cpp.csv";
 
-	// cout << "-----------NAIVE_MULT------------" << endl;
-	// data.open(naive_file);
-	// data << "NUM_DIGITS, EXECUTION_TIME_NSQUARED[ms]\n";
-	// while (execution_time_naive < limit) {
-	// // while (num_digits < 5) {
-    //     cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
+	cout << "-----------NAIVE_MULT------------" << endl;
+	data.open(naive_file);
+	data << "NUM_DIGITS, EXECUTION_TIME_NSQUARED[ms]\n";
+	while (execution_time_naive < limit) {
+	// while (num_digits < 5) {
+        cout << "NUMBER OF DIGITS: " << num_digits << endl;
 
-	// 	int digitsX[num_digits];
-	// 	int digitsY[num_digits];
-	// 	generate_integer(digitsX, num_digits);
-	// 	generate_integer(digitsY, num_digits);
-	// 	// print_array(digitsX, num_digits, "digitsX: ");
-	// 	// print_array(digitsY, num_digits, "digitsY: ");
-	// 	X.set_digits(digitsX, num_digits);
-	// 	Y.set_digits(digitsY, num_digits);
-		
-	// 	// Get starting timepoint
-	// 	auto start = high_resolution_clock::now();
-	// 	// Call the function, here sort()
-	// 	cout << "\tCalling naive_mult..." << endl;
-	// 	X.naive_mult(Y);
-	// 	// Get ending timepoint
-	// 	auto stop = high_resolution_clock::now();
-	// 	// Get duration
-	// 	execution_time_naive = duration_cast<milliseconds>(stop - start).count();
-	// 	// cout << "Time taken by function: "
-	// 	// 	 << execution_time_naive.count() << " milliseconds" << endl;
+		int8_t * digitsX = (int8_t *) calloc(num_digits, sizeof(int8_t));
+		int8_t * digitsY = (int8_t *) calloc(num_digits, sizeof(int8_t));
 
-	// 	data << num_digits << ", " << execution_time_naive << "\n";
+		generate_integer(digitsX, num_digits);
+		generate_integer(digitsY, num_digits);
+
+		X.set_digits(digitsX, num_digits);
+		Y.set_digits(digitsY, num_digits);
 		
-	// 	num_digits *= 2;
-	// }
-	// data.close();
+		// Get starting timepoint
+		auto start = high_resolution_clock::now();
+		// Call the function, here sort()
+		cout << "\tCalling naive_mult..." << endl;
+		X.naive_mult(Y);
+		// Get ending timepoint
+		auto stop = high_resolution_clock::now();
+		// Get duration
+		execution_time_naive = duration_cast<milliseconds>(stop - start).count();
+		cout << "Time taken by function: "
+			 << execution_time_naive << " milliseconds" << endl;
+
+		data << num_digits << ", " << execution_time_naive << "\n";
+		
+		num_digits *= 2;
+		free(digitsX);
+		free(digitsY);
+	}
+	data.close();
 
     
-	cout << "--------------BIG_MULT--------------" << endl;
+	cout << "\n--------------BIG_MULT--------------" << endl;
 	// Reset things
 	num_digits = 1;
 	data.open(big_file);
 	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
-	while (num_digits < 134217728) {
-	// while (num_digits < 5) {
-		// Integer X, Y;
+	// while (num_digits < 134217728) {
+	while (num_digits < 256) {
 
-        cout << "\nNUMBER OF DIGITS: " << num_digits << endl;
+        cout << "NUMBER OF DIGITS: " << num_digits << endl;
 
 		int8_t * digitsX = (int8_t *) calloc(num_digits, sizeof(int8_t));
 		int8_t * digitsY = (int8_t *) calloc(num_digits, sizeof(int8_t));
