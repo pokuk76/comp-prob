@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
 	int execution_time_naive = 0;  // In milliseconds
 	int execution_time_big = 0;
 	double mem_big;
-	auto limit = 1 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
+	auto limit = 10 * (60 * pow(10, 3));  // 10 minutes in milliseconds (I hope)
 	double max_mem = 0; 
 	if (platform == 1) {
 		// ECE
@@ -378,8 +378,8 @@ int main(int argc, char* argv[]) {
 	num_digits = 1;
 	data.open(big_file);
 	data << "NUM_DIGITS, EXECUTION_TIME_NLOGN[ms]\n";
-	// while (num_digits < 134217728) {
-	while (num_digits < 256) {
+	while (num_digits < 4*134217728) {
+	// while (num_digits < 256) {
 
         cout << "NUMBER OF DIGITS: " << num_digits << endl;
 

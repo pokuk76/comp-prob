@@ -109,7 +109,7 @@ function main()
     # EXPERIMENT
     execution_time_naive = 0  # In seconds
     execution_time_big = 0
-	limit = 0.5 * 60  # 10 minutes in seconds (I hope)
+	limit = 10 * 60  # 10 minutes in seconds (I hope)
 	num_digits = 1
 
     # Data collection
@@ -147,10 +147,11 @@ function main()
     write_data(execution_times_naive, num_digits_arr, naive_file)
 
     # Reset things
-    num_digits=1
+	num_digits_arr = Vector{Int64}()
+	num_digits=1
     println("\n-------------------BIG_MULT-------------------")
-    # while execution_time_big < limit
-    while num_digits < 257
+    while execution_time_big < limit
+    # while num_digits < 257
         println("NUMBER OF DIGITS: $num_digits")
         X = zeros(Int8, num_digits)
         Y = zeros(Int8, num_digits)
