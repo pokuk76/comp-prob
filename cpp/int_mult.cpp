@@ -134,8 +134,8 @@ class FFT {
 
 		void test_fftw() {
 			int N = 4;
-			int in[N] = {2, 3, 0, 0};
-			int out[N];
+			int in[4] = {2, 3, 0, 0};
+			int out[4];
 
 			// fftw_complex fft_in[N] = {2, 3, 0, 0};
 			fftw_complex *fft_in;
@@ -420,12 +420,10 @@ int main(int argc, char* argv[]) {
 
 		int8_t * digitsX = (int8_t *) calloc(num_digits, sizeof(int8_t));
 		int8_t * digitsY = (int8_t *) calloc(num_digits, sizeof(int8_t));
-		// vector<int8_t> digitsX (num_digits, 0);
-		// vector<int8_t> digitsY (num_digits, 0);
+
 		generate_integer(digitsX, num_digits);
 		generate_integer(digitsY, num_digits);
-		// print_array(digitsX, num_digits, "digitsX: ");
-		// print_array(digitsY, num_digits, "digitsY: ");
+
 		X.set_digits(digitsX, num_digits);
 		Y.set_digits(digitsY, num_digits);
 		
